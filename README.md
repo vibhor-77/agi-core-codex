@@ -31,6 +31,12 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[dev]'
 pytest
+python -m agi_core_codex arc-data discover --benchmark arc-agi-1 --split training
+python -m agi_core_codex arc-data make-splits \
+  --benchmark arc-agi-1 \
+  --output-dir experiments/splits \
+  --train-val-count 80 \
+  --seed 7
 python -m agi_core_codex arc-accuracy tune \
   --dataset-dir tests/fixtures/arc \
   --split-file experiments/splits/arc_train_dev.json
@@ -51,3 +57,10 @@ python -m agi_core_codex arc-accuracy tune \
 - `experiments/splits/`: split policies and example split files
 - `artifacts/`: immutable run outputs
 - `tests/`: unit and regression tests
+
+## Real-data workflow
+
+Use `arc-data make-splits` against the ARC training directory to create deterministic
+`train-dev` and `train-val` files. If the dataset is present in a common location,
+the command auto-discovers it. In this workspace it can discover the sibling
+read-only dataset under `~/github/agi-core/data/ARC-AGI/data/training`.

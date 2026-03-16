@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from agi_core_codex.domains.arc.discovery import discover_arc_dataset
 from agi_core_codex.domains.arc.runner import ArcRunOptions, run_arc_profile
+from agi_core_codex.domains.arc.splits import write_train_splits
 
 
 PROFILES = ("baseline-core", "arc-accuracy", "arc-theory")
@@ -12,6 +14,26 @@ PROFILES = ("baseline-core", "arc-accuracy", "arc-theory")
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="agi-core-codex")
     subparsers = parser.add_subparsers(dest="profile", required=True)
+
+    arc_data_parser = subparsers.add_parser("arc-data")
+    arc_data_subparsers = arc_data_parser.add_subparsers(dest="arc_data_command", required=True)
+
+    discover_parser = arc_data_subparsers.add_parser("discover")
+    discover_parser.add_argument("--benchmark", choices=("arc-agi-1", "arc-agi-2"), required=True)
+    discover_parser.add_argument("--split", choices=("training", "evaluation"), required=True)
+
+    make_splits_parser = arc_data_subparsers.add_parser("make-splits")
+    make_splits_parser.add_argument(
+        "--benchmark",
+        choices=("arc-agi-1", "arc-agi-2"),
+        required=True,
+    )
+    make_splits_parser.add_argument("--dataset-dir", type=Path)
+    make_splits_parser.add_argument("--output-dir", type=Path, required=True)
+    make_splits_parser.add_argument("--seed", type=int, default=0)
+    make_splits_parser.add_argument("--train-val-count", type=int)
+    make_splits_parser.add_argument("--train-val-fraction", type=float, default=0.2)
+    make_splits_parser.add_argument("--prefix", type=str)
 
     for profile in PROFILES:
         profile_parser = subparsers.add_parser(profile)
@@ -42,6 +64,40 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
+
+    if args.profile == "arc-data":
+        if args.arc_data_command == "discover":
+            discovered = discover_arc_dataset(benchmark=args.benchmark, split=args.split)
+            if discovered is None:
+                print("not-found")
+                return 1
+            print(discovered)
+            return 0
+
+        if args.arc_data_command == "make-splits":
+            dataset_dir = args.dataset_dir
+            if dataset_dir is None:
+                discovered = discover_arc_dataset(benchmark=args.benchmark, split="training")
+                if discovered is None:
+                    parser.error(
+                        "could not auto-discover ARC training data; pass --dataset-dir explicitly"
+                    )
+                dataset_dir = discovered
+
+            train_dev_path, train_val_path = write_train_splits(
+                benchmark=args.benchmark,
+                dataset_dir=dataset_dir,
+                output_dir=args.output_dir,
+                seed=args.seed,
+                train_val_count=args.train_val_count,
+                train_val_fraction=args.train_val_fraction,
+                prefix=args.prefix,
+            )
+            print(
+                f"benchmark={args.benchmark} dataset_dir={dataset_dir} "
+                f"train_dev={train_dev_path} train_val={train_val_path}"
+            )
+            return 0
 
     manifest, manifest_path = run_arc_profile(
         ArcRunOptions(
