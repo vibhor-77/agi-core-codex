@@ -20,9 +20,10 @@ from agi_core_codex.core.manifests import (
     write_manifest,
 )
 from agi_core_codex.core.memory import InMemoryLibrary
+from agi_core_codex.domains.arc.discovery import discover_arc_dataset, validate_dataset_dir
 from agi_core_codex.domains.arc.environment import ArcEnvironment
 from agi_core_codex.domains.arc.grammar import ArcGrammar
-from agi_core_codex.domains.arc.loader import load_arc_tasks, load_split_ids
+from agi_core_codex.domains.arc.loader import load_arc_tasks, load_split_ids, load_split_payload
 from agi_core_codex.domains.arc.profiles import build_arc_profile
 from agi_core_codex.domains.arc.scorer import ArcScorer
 
@@ -31,13 +32,15 @@ from agi_core_codex.domains.arc.scorer import ArcScorer
 class ArcRunOptions:
     profile: str
     mode: str
-    dataset_dir: Path
+    dataset_dir: Path | None
     split_file: Path
     output_root: Path
     seed: int = 0
     limit: int | None = None
     include_strategies: tuple[str, ...] = ()
     exclude_strategies: tuple[str, ...] = ()
+    benchmark: str | None = None
+    dataset_split: str = "training"
 
 
 def _repository_root() -> Path:
@@ -170,9 +173,35 @@ def _aggregate_metrics(task_records: tuple[TaskRecord, ...]) -> tuple[MetricReco
     )
 
 
+def _resolve_dataset_dir(options: ArcRunOptions) -> Path:
+    if options.dataset_dir is not None:
+        return options.dataset_dir
+
+    split_payload = load_split_payload(options.split_file)
+    source_dataset_dir = split_payload.get("source_dataset_dir")
+    if isinstance(source_dataset_dir, str):
+        source_path = Path(source_dataset_dir)
+        if validate_dataset_dir(source_path):
+            return source_path
+
+    benchmark = options.benchmark or split_payload.get("benchmark")
+    if not isinstance(benchmark, str):
+        raise ValueError(
+            "dataset directory was not provided and split metadata does not contain a usable benchmark"
+        )
+
+    discovered = discover_arc_dataset(benchmark=benchmark, split=options.dataset_split)
+    if discovered is None:
+        raise ValueError(
+            f"could not discover dataset for benchmark={benchmark} split={options.dataset_split}"
+        )
+    return discovered
+
+
 def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
     split_ids = load_split_ids(options.split_file)
-    tasks = load_arc_tasks(options.dataset_dir, split_ids=split_ids, limit=options.limit)
+    dataset_dir = _resolve_dataset_dir(options)
+    tasks = load_arc_tasks(dataset_dir, split_ids=split_ids, limit=options.limit)
 
     environment = ArcEnvironment()
     grammar = ArcGrammar()
@@ -235,6 +264,7 @@ def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
             for note in (
                 "public eval should remain checkpoint-only",
                 f"mode={options.mode}",
+                f"dataset_dir={dataset_dir}",
                 (
                     f"include_strategies={','.join(options.include_strategies)}"
                     if options.include_strategies

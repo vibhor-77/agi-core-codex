@@ -38,7 +38,6 @@ python -m agi_core_codex arc-data make-splits \
   --train-val-count 80 \
   --seed 7
 python -m agi_core_codex arc-accuracy tune \
-  --dataset-dir tests/fixtures/arc \
   --split-file experiments/splits/arc_train_dev.json
 ```
 
@@ -64,3 +63,6 @@ Use `arc-data make-splits` against the ARC training directory to create determin
 `train-dev` and `train-val` files. If the dataset is present in a common location,
 the command auto-discovers it. In this workspace it can discover the sibling
 read-only dataset under `~/github/agi-core/data/ARC-AGI/data/training`.
+
+Once a split file has `benchmark` and `source_dataset_dir` metadata, `arc-accuracy`
+and `arc-theory` can auto-resolve the dataset path, so `--dataset-dir` becomes optional.

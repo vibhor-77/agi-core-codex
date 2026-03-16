@@ -6,8 +6,12 @@ from pathlib import Path
 from agi_core_codex.domains.arc.types import ArcExample, ArcTask, ArcTestCase, freeze_grid
 
 
+def load_split_payload(split_file: Path) -> dict[str, object]:
+    return json.loads(split_file.read_text())
+
+
 def load_split_ids(split_file: Path) -> tuple[str, ...]:
-    payload = json.loads(split_file.read_text())
+    payload = load_split_payload(split_file)
     task_ids = payload.get("task_ids", [])
     return tuple(str(task_id) for task_id in task_ids)
 
@@ -46,4 +50,3 @@ def load_arc_tasks(
     if limit is not None:
         return tasks[:limit]
     return tasks
-

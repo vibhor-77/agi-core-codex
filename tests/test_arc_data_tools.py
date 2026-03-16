@@ -5,7 +5,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from agi_core_codex.core.manifests import load_manifest
 from agi_core_codex.domains.arc.discovery import discover_arc_dataset
+from agi_core_codex.domains.arc.runner import ArcRunOptions, run_arc_profile
 from agi_core_codex.domains.arc.splits import partition_train_tasks, write_train_splits
 
 
@@ -84,3 +86,35 @@ def test_arc_data_make_splits_cli(
     assert "train_dev=" in result.stdout
     assert (tmp_path / "arc_agi_1_train_dev.json").exists()
     assert (tmp_path / "arc_agi_1_train_val.json").exists()
+
+
+def test_arc_profile_can_resolve_dataset_dir_from_split_metadata(
+    arc_fixture_dir: Path,
+    tmp_path: Path,
+) -> None:
+    train_dev_path, _ = write_train_splits(
+        benchmark="arc-agi-1",
+        dataset_dir=arc_fixture_dir,
+        output_dir=tmp_path / "splits",
+        seed=5,
+        train_val_count=2,
+    )
+
+    manifest, manifest_path = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=None,
+            split_file=train_dev_path,
+            output_root=tmp_path / "artifacts",
+            seed=5,
+            limit=2,
+        )
+    )
+
+    assert manifest.task_count == 2
+    payload = load_manifest(manifest_path)
+    assert any(
+        note == f"dataset_dir={arc_fixture_dir}"
+        for note in payload["notes"]
+    )

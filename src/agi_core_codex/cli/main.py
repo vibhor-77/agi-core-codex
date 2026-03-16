@@ -40,11 +40,22 @@ def _build_parser() -> argparse.ArgumentParser:
         mode_parsers = profile_parser.add_subparsers(dest="mode", required=True)
         for mode in ("tune", "score"):
             mode_parser = mode_parsers.add_parser(mode)
-            mode_parser.add_argument("--dataset-dir", type=Path, required=True)
+            mode_parser.add_argument("--dataset-dir", type=Path)
             mode_parser.add_argument("--split-file", type=Path, required=True)
             mode_parser.add_argument("--output-root", type=Path, default=Path("artifacts"))
             mode_parser.add_argument("--seed", type=int, default=0)
             mode_parser.add_argument("--limit", type=int)
+            mode_parser.add_argument(
+                "--benchmark",
+                choices=("arc-agi-1", "arc-agi-2"),
+                help="Optional fallback used to auto-discover the dataset when --dataset-dir is omitted.",
+            )
+            mode_parser.add_argument(
+                "--dataset-split",
+                choices=("training", "evaluation"),
+                default="training",
+                help="Which ARC dataset split to auto-discover when --dataset-dir is omitted.",
+            )
             mode_parser.add_argument(
                 "--include-strategy",
                 action="append",
@@ -110,6 +121,8 @@ def main(argv: list[str] | None = None) -> int:
             limit=args.limit,
             include_strategies=tuple(args.include_strategy),
             exclude_strategies=tuple(args.exclude_strategy),
+            benchmark=args.benchmark,
+            dataset_split=args.dataset_split,
         )
     )
     metrics = manifest.metrics_as_dict()
