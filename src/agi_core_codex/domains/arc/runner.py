@@ -1,0 +1,246 @@
+from __future__ import annotations
+
+import platform
+import subprocess
+import sys
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+from agi_core_codex.core.hashing import stable_hash
+from agi_core_codex.core.interfaces import SearchBudget
+from agi_core_codex.core.kernel import SearchKernel
+from agi_core_codex.core.manifests import (
+    ArtifactIndexEntry,
+    MetricRecord,
+    PhaseRecord,
+    RunManifest,
+    TaskRecord,
+    update_index,
+    write_manifest,
+)
+from agi_core_codex.core.memory import InMemoryLibrary
+from agi_core_codex.domains.arc.environment import ArcEnvironment
+from agi_core_codex.domains.arc.grammar import ArcGrammar
+from agi_core_codex.domains.arc.loader import load_arc_tasks, load_split_ids
+from agi_core_codex.domains.arc.profiles import build_arc_profile
+from agi_core_codex.domains.arc.scorer import ArcScorer
+
+
+@dataclass(frozen=True)
+class ArcRunOptions:
+    profile: str
+    mode: str
+    dataset_dir: Path
+    split_file: Path
+    output_root: Path
+    seed: int = 0
+    limit: int | None = None
+
+
+def _repository_root() -> Path:
+    return Path(__file__).resolve().parents[4]
+
+
+def _code_hash(repo_root: Path) -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return result.stdout.strip()
+    return "untracked"
+
+
+def _env_hash() -> str:
+    payload = {
+        "python_version": sys.version,
+        "platform": platform.platform(),
+    }
+    return stable_hash(payload, namespace="environment")
+
+
+def _build_budget(profile: str, primitive_count: int, task_cells: int) -> SearchBudget:
+    bonus = {
+        "baseline-core": 0,
+        "arc-accuracy": 12,
+        "arc-theory": 16,
+    }[profile]
+    multiplier = {
+        "baseline-core": 1,
+        "arc-accuracy": 1,
+        "arc-theory": 2,
+    }[profile]
+    max_evaluations = max(primitive_count * multiplier + bonus, 8)
+    return SearchBudget(
+        max_evaluations=max_evaluations,
+        max_cell_evaluations=max_evaluations * max(task_cells, 1),
+        max_program_complexity=max(primitive_count, 12),
+    )
+
+
+def _phase_records(search_report) -> tuple[PhaseRecord, ...]:
+    records = []
+    for result in search_report.strategy_results:
+        best_train_accuracy = None
+        best_program_id = None
+        if result.candidates:
+            top = sorted(
+                result.candidates,
+                key=lambda candidate: (
+                    candidate.score.train_accuracy,
+                    -candidate.score.failure_count,
+                    candidate.program.id,
+                ),
+                reverse=True,
+            )[0]
+            best_train_accuracy = top.score.train_accuracy
+            best_program_id = top.program.id
+        records.append(
+            PhaseRecord(
+                name=result.name,
+                status=result.status,
+                generated=result.generated,
+                evaluated=result.evaluated,
+                consumed=result.consumed.to_dict(),
+                best_program_id=best_program_id,
+                best_train_accuracy=best_train_accuracy,
+            )
+        )
+    return tuple(records)
+
+
+def _task_record(search_report) -> TaskRecord:
+    best = search_report.best_candidate
+    test_verification_status = "not_checked"
+    if best is not None:
+        if best.score.test_accuracy is None:
+            test_verification_status = "unavailable"
+        else:
+            test_verification_status = "available_and_checked"
+
+    return TaskRecord(
+        task_key=search_report.task_key,
+        solved_train=bool(best and best.score.train_exact),
+        solved_test=best.score.test_exact if best else None,
+        best_program_id=best.program.id if best else None,
+        best_program_name=best.program.name if best else None,
+        best_strategy=best.strategy_name if best else None,
+        train_accuracy=best.score.train_accuracy if best else 0.0,
+        test_accuracy=best.score.test_accuracy if best else None,
+        failure_count=best.score.failure_count if best else 0,
+        budget_used=search_report.budget_used.to_dict(),
+        test_verification_status=test_verification_status,
+        phase_records=_phase_records(search_report),
+    )
+
+
+def _aggregate_metrics(task_records: tuple[TaskRecord, ...]) -> tuple[MetricRecord, ...]:
+    task_count = len(task_records)
+    solved_train = sum(1 for record in task_records if record.solved_train)
+    train_accuracy_mean = (
+        sum(record.train_accuracy for record in task_records) / task_count if task_count else 0.0
+    )
+
+    test_eligible = [record for record in task_records if record.solved_test is not None]
+    solved_test = sum(1 for record in test_eligible if record.solved_test)
+    test_accuracy_mean = (
+        sum((record.test_accuracy or 0.0) for record in test_eligible) / len(test_eligible)
+        if test_eligible
+        else 0.0
+    )
+
+    return (
+        MetricRecord("task_count", task_count, higher_is_better=False),
+        MetricRecord("solved_train", solved_train),
+        MetricRecord("train_exact_accuracy", solved_train / task_count if task_count else 0.0),
+        MetricRecord("mean_train_accuracy", train_accuracy_mean),
+        MetricRecord("test_eligible_count", len(test_eligible), higher_is_better=False),
+        MetricRecord("solved_test", solved_test),
+        MetricRecord(
+            "test_exact_accuracy",
+            solved_test / len(test_eligible) if test_eligible else 0.0,
+        ),
+        MetricRecord("mean_test_accuracy", test_accuracy_mean),
+    )
+
+
+def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
+    split_ids = load_split_ids(options.split_file)
+    tasks = load_arc_tasks(options.dataset_dir, split_ids=split_ids, limit=options.limit)
+
+    environment = ArcEnvironment()
+    grammar = ArcGrammar()
+    scorer = ArcScorer()
+    memory = InMemoryLibrary()
+    kernel = SearchKernel(build_arc_profile(options.profile))
+
+    task_records = []
+    for task in tasks:
+        primitive_count = grammar.primitive_count(task)
+        budget = _build_budget(options.profile, primitive_count, environment.task_size(task))
+        report = kernel.run(
+            task=task,
+            environment=environment,
+            grammar=grammar,
+            scorer=scorer,
+            memory=memory,
+            budget=budget,
+            seed=options.seed,
+        )
+        task_records.append(_task_record(report))
+
+    metrics = _aggregate_metrics(tuple(task_records))
+    created_at = datetime.now(timezone.utc).isoformat()
+    run_id = stable_hash(
+        {
+            "created_at": created_at,
+            "profile": options.profile,
+            "mode": options.mode,
+            "split_file": str(options.split_file),
+            "seed": options.seed,
+        },
+        namespace="run",
+    )[:16]
+
+    manifest = RunManifest(
+        run_id=run_id,
+        created_at=created_at,
+        profile=options.profile,
+        mode=options.mode,
+        domain="arc",
+        split=options.split_file.stem,
+        split_path=str(options.split_file),
+        code_hash=_code_hash(_repository_root()),
+        env_hash=_env_hash(),
+        python_version=sys.version.split()[0],
+        primitive_count=max((ArcGrammar().primitive_count(task) for task in tasks), default=0),
+        strategy_set=tuple(strategy.name for strategy in build_arc_profile(options.profile)),
+        seed=options.seed,
+        task_count=len(task_records),
+        metrics=metrics,
+        tasks=tuple(task_records),
+        notes=(
+            "public eval should remain checkpoint-only",
+            f"mode={options.mode}",
+        ),
+    )
+
+    manifest_path = write_manifest(manifest, options.output_root)
+    update_index(
+        options.output_root,
+        ArtifactIndexEntry(
+            run_id=manifest.run_id,
+            created_at=manifest.created_at,
+            profile=manifest.profile,
+            mode=manifest.mode,
+            domain=manifest.domain,
+            split=manifest.split,
+            manifest_path=str(manifest_path),
+            metrics=manifest.metrics,
+        ),
+    )
+    return manifest, manifest_path

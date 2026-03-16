@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agi-core-codex"
+version = "0.1.0"
+description = "Clean-slate AGI research scaffold with a minimal generic core and explicit domain strategies."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+authors = [
+  { name = "vibhor-77", email = "vibhor@gmail.com" },
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4.0",
+  "ruff>=0.11.0",
+]
+
+[project.scripts]
+agi-core-codex = "agi_core_codex.cli.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agi_core_codex"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+

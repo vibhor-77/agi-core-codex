@@ -1,0 +1,51 @@
+# agi-core-codex
+
+`agi-core-codex` is a clean-slate rebuild of the AGI prototype around two constraints:
+
+1. The shared core must stay genuinely domain-generic.
+2. Benchmark-specific machinery must live in explicit strategy plugins with measured attribution.
+
+This repository starts with ARC as the first implemented domain and keeps room for Zork and later robotics without polluting the common core with ARC-shaped hooks.
+
+## What exists today
+
+- A small generic kernel built around `Environment`, `Grammar`, `Scorer`, `Memory`, and `Strategy`.
+- Deterministic budgeted search with explicit failure handling.
+- Immutable run manifests and an artifact index for reproducible experiments.
+- ARC support implemented as a plugin layer with named strategies:
+  - grammar primitives
+  - constant-output synthesis
+  - consistent color-map synthesis
+  - task-scoped absolute patch synthesis
+- Three CLI profiles:
+  - `baseline-core`
+  - `arc-accuracy`
+  - `arc-theory`
+
+## Quick start
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+pytest
+python -m agi_core_codex arc-accuracy tune \
+  --dataset-dir tests/fixtures/arc \
+  --split-file experiments/splits/arc_train_dev.json
+```
+
+## Design choices
+
+- The core has no ARC-only escape hatches.
+- Dynamic operators get stable semantic IDs.
+- Failure is treated as failure, never silently mapped to identity.
+- Public evaluation should be checkpoint-only; tuning happens on train-derived splits.
+
+## Layout
+
+- `src/agi_core_codex/core/`: generic kernel, manifests, memory, reusable strategies
+- `src/agi_core_codex/domains/arc/`: ARC domain implementation and ARC-only strategies
+- `experiments/splits/`: split policies and example split files
+- `artifacts/`: immutable run outputs
+- `tests/`: unit and regression tests
+
