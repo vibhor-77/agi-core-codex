@@ -36,6 +36,8 @@ class ArcRunOptions:
     output_root: Path
     seed: int = 0
     limit: int | None = None
+    include_strategies: tuple[str, ...] = ()
+    exclude_strategies: tuple[str, ...] = ()
 
 
 def _repository_root() -> Path:
@@ -176,7 +178,12 @@ def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
     grammar = ArcGrammar()
     scorer = ArcScorer()
     memory = InMemoryLibrary()
-    kernel = SearchKernel(build_arc_profile(options.profile))
+    strategies = build_arc_profile(
+        options.profile,
+        include=options.include_strategies,
+        exclude=options.exclude_strategies,
+    )
+    kernel = SearchKernel(strategies)
 
     task_records = []
     for task in tasks:
@@ -218,14 +225,28 @@ def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
         env_hash=_env_hash(),
         python_version=sys.version.split()[0],
         primitive_count=max((ArcGrammar().primitive_count(task) for task in tasks), default=0),
-        strategy_set=tuple(strategy.name for strategy in build_arc_profile(options.profile)),
+        strategy_set=tuple(strategy.name for strategy in strategies),
         seed=options.seed,
         task_count=len(task_records),
         metrics=metrics,
         tasks=tuple(task_records),
-        notes=(
-            "public eval should remain checkpoint-only",
-            f"mode={options.mode}",
+        notes=tuple(
+            note
+            for note in (
+                "public eval should remain checkpoint-only",
+                f"mode={options.mode}",
+                (
+                    f"include_strategies={','.join(options.include_strategies)}"
+                    if options.include_strategies
+                    else None
+                ),
+                (
+                    f"exclude_strategies={','.join(options.exclude_strategies)}"
+                    if options.exclude_strategies
+                    else None
+                ),
+            )
+            if note is not None
         ),
     )
 

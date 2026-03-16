@@ -14,6 +14,8 @@ This repository starts with ARC as the first implemented domain and keeps room f
 - Immutable run manifests and an artifact index for reproducible experiments.
 - ARC support implemented as a plugin layer with named strategies:
   - grammar primitives
+  - boolean halves cross-reference
+  - separator-based cross-reference
   - constant-output synthesis
   - consistent color-map synthesis
   - task-scoped absolute patch synthesis
@@ -39,6 +41,7 @@ python -m agi_core_codex arc-accuracy tune \
 - The core has no ARC-only escape hatches.
 - Dynamic operators get stable semantic IDs.
 - Failure is treated as failure, never silently mapped to identity.
+- ARC recovery heuristics live as explicit strategies that can be ablated from the CLI.
 - Public evaluation should be checkpoint-only; tuning happens on train-derived splits.
 
 ## Layout
@@ -48,4 +51,3 @@ python -m agi_core_codex arc-accuracy tune \
 - `experiments/splits/`: split policies and example split files
 - `artifacts/`: immutable run outputs
 - `tests/`: unit and regression tests
-

@@ -23,6 +23,18 @@ def _build_parser() -> argparse.ArgumentParser:
             mode_parser.add_argument("--output-root", type=Path, default=Path("artifacts"))
             mode_parser.add_argument("--seed", type=int, default=0)
             mode_parser.add_argument("--limit", type=int)
+            mode_parser.add_argument(
+                "--include-strategy",
+                action="append",
+                default=[],
+                help="Restrict the profile to a subset of its strategies. Repeatable.",
+            )
+            mode_parser.add_argument(
+                "--exclude-strategy",
+                action="append",
+                default=[],
+                help="Drop one or more strategies from the selected profile. Repeatable.",
+            )
 
     return parser
 
@@ -40,6 +52,8 @@ def main(argv: list[str] | None = None) -> int:
             output_root=args.output_root,
             seed=args.seed,
             limit=args.limit,
+            include_strategies=tuple(args.include_strategy),
+            exclude_strategies=tuple(args.exclude_strategy),
         )
     )
     metrics = manifest.metrics_as_dict()
@@ -50,4 +64,3 @@ def main(argv: list[str] | None = None) -> int:
         f"manifest={manifest_path}"
     )
     return 0
-

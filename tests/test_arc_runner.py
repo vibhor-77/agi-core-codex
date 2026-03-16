@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from agi_core_codex.core.manifests import load_manifest
+from agi_core_codex.domains.arc.profiles import build_arc_profile, profile_strategy_names
 from agi_core_codex.domains.arc.programs import make_arc_program
 from agi_core_codex.domains.arc.runner import ArcRunOptions, run_arc_profile
 
@@ -97,3 +98,64 @@ def test_runs_are_deterministic_for_fixed_seed(
 
     assert _comparable_manifest(first) == _comparable_manifest(second)
 
+
+def test_profile_strategy_filtering_preserves_explicit_ablation_controls() -> None:
+    selected = build_arc_profile(
+        "arc-accuracy",
+        include=("arc-boolean-halves", "arc-separator-cross-reference"),
+        exclude=("arc-separator-cross-reference",),
+    )
+    assert tuple(strategy.name for strategy in selected) == ("arc-boolean-halves",)
+    assert "arc-boolean-halves" in profile_strategy_names("arc-accuracy")
+
+
+def test_cross_reference_strategies_solve_recovery_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_cross_reference_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=11,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 2
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 2
+    best_strategies = {task.task_key: task.best_strategy for task in manifest.tasks}
+    assert best_strategies["boolean_halves_recolor"] == "arc-boolean-halves"
+    assert best_strategies["separator_extract"] == "arc-separator-cross-reference"
+
+
+def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_boolean_halves_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=19,
+            exclude_strategies=("arc-boolean-halves",),
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == 0
+    assert manifest.strategy_set == (
+        "arc-separator-cross-reference",
+        "grammar-primitives",
+        "arc-constant-output",
+        "arc-color-map",
+        "arc-absolute-patch",
+    )
