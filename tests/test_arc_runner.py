@@ -126,11 +126,16 @@ def test_cross_reference_strategies_solve_recovery_smoke_split(
     )
 
     metrics = manifest.metrics_as_dict()
-    assert metrics["solved_train"] == metrics["task_count"] == 2
-    assert metrics["solved_test"] == metrics["test_eligible_count"] == 2
+    assert metrics["solved_train"] == metrics["task_count"] == 4
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 4
     best_strategies = {task.task_key: task.best_strategy for task in manifest.tasks}
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
     assert best_strategies["boolean_halves_recolor"] == "arc-boolean-halves"
     assert best_strategies["separator_extract"] == "arc-separator-cross-reference"
+    assert best_strategies["separator_or_reduce"] == "arc-separator-cross-reference"
+    assert best_strategies["separator_majority_reduce"] == "arc-separator-cross-reference"
+    assert best_programs["separator_or_reduce"] == "cross-ref-or_reduce-cells"
+    assert best_programs["separator_majority_reduce"] == "cross-ref-majority_reduce-cells"
 
 
 def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(

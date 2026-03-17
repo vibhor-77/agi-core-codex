@@ -1,4 +1,8 @@
 {
-  "task_ids": ["boolean_halves_recolor", "separator_extract"]
+  "task_ids": [
+    "boolean_halves_recolor",
+    "separator_extract",
+    "separator_or_reduce",
+    "separator_majority_reduce"
+  ]
 }
-

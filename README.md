@@ -16,7 +16,7 @@ This repository starts with ARC as the first implemented domain and keeps room f
   - grammar primitives
   - boolean halves cross-reference
   - separator-grid row/column propagation
-  - separator-based cross-reference
+  - separator-based cross-reference and cell reductions
   - scale/tile/downscale ratio detection
   - template stamping
   - constant-output synthesis

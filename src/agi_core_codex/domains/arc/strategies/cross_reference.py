@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -52,6 +53,37 @@ def _op_b_minus_a(a: Grid, b: Grid) -> Grid:
         tuple(right if left == 0 else 0 for left, right in zip(a_row, b_row, strict=True))
         for a_row, b_row in zip(a, b, strict=True)
     )
+
+
+def _reduce_or(cells: tuple[Grid, ...]) -> Grid:
+    height, width = grid_shape(cells[0])
+    rows = [[0 for _ in range(width)] for _ in range(height)]
+    for cell in cells:
+        for row_index, row in enumerate(cell):
+            for col_index, value in enumerate(row):
+                if value != 0:
+                    rows[row_index][col_index] = value
+    return tuple(tuple(row) for row in rows)
+
+
+def _reduce_majority(cells: tuple[Grid, ...]) -> Grid:
+    height, width = grid_shape(cells[0])
+    threshold = len(cells) // 2
+    rows = []
+    for row_index in range(height):
+        row = []
+        for col_index in range(width):
+            values = [
+                cell[row_index][col_index]
+                for cell in cells
+                if cell[row_index][col_index] != 0
+            ]
+            if len(values) > threshold:
+                row.append(Counter(values).most_common(1)[0][0])
+            else:
+                row.append(0)
+        rows.append(tuple(row))
+    return tuple(rows)
 
 
 def _variants_for_first_example(base_output: Grid, expected_output: Grid) -> tuple[tuple[str, int | None], ...]:
@@ -355,6 +387,55 @@ class SeparatorCrossReferenceStrategy:
                                 )
                             )
 
+            if len(flat_cells) >= 2:
+                reductions = (
+                    ("or_reduce", _reduce_or),
+                    ("majority_reduce", _reduce_majority),
+                )
+                reduction_cells = tuple(cell for _, _, cell in flat_cells)
+                if grid_shape(reduction_cells[0]) == output_shape:
+                    for reduction_name, reduction in reductions:
+                        base_output = reduction(reduction_cells)
+                        for variant_name, target_color in _variants_for_first_example(
+                            base_output,
+                            first_example.output,
+                        ):
+                            def _make_reduction_executor(
+                                row_separators=row_separators,
+                                col_separators=col_separators,
+                                reduction=reduction,
+                                variant_name=variant_name,
+                                target_color=target_color,
+                            ):
+                                def executor(grid: Grid) -> Grid:
+                                    cells = split_grid_by_separators(grid, row_separators, col_separators)
+                                    flat_cells = tuple(cell for _, _, cell in flatten_cells(cells))
+                                    return _apply_variant(
+                                        reduction(flat_cells),
+                                        variant_name,
+                                        target_color,
+                                    )
+                                return executor
+
+                            name = f"cross-ref-{reduction_name}-cells"
+                            if variant_name == "recolor_nonzero":
+                                name += f"-recolor-{target_color}"
+                            candidate_specs.append(
+                                (
+                                    name,
+                                    {
+                                        "type": "cross_reference_cell_reduction",
+                                        "reduction": reduction_name,
+                                        "row_separators": row_separators,
+                                        "col_separators": col_separators,
+                                        "variant": variant_name,
+                                        "target_color": target_color,
+                                    },
+                                    _make_reduction_executor(),
+                                    7 if variant_name == "raw" else 8,
+                                )
+                            )
+
         candidates = []
         generated = 0
         seen_names: set[str] = set()
@@ -384,4 +465,3 @@ class SeparatorCrossReferenceStrategy:
             candidates=candidates,
             notes=notes,
         )
-
