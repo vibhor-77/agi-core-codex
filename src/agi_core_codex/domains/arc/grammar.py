@@ -85,6 +85,32 @@ def _crop_nonzero(grid: Grid) -> Grid:
     )
 
 
+def _gravity_down(grid: Grid) -> Grid:
+    if not grid:
+        return ()
+    height = len(grid)
+    width = len(grid[0])
+    rows = [[0 for _ in range(width)] for _ in range(height)]
+    for col_index in range(width):
+        nonzero = [grid[row_index][col_index] for row_index in range(height) if grid[row_index][col_index] != 0]
+        for offset, value in enumerate(nonzero):
+            rows[height - len(nonzero) + offset][col_index] = value
+    return freeze_grid(rows)
+
+
+def _gravity_up(grid: Grid) -> Grid:
+    if not grid:
+        return ()
+    height = len(grid)
+    width = len(grid[0])
+    rows = [[0 for _ in range(width)] for _ in range(height)]
+    for col_index in range(width):
+        nonzero = [grid[row_index][col_index] for row_index in range(height) if grid[row_index][col_index] != 0]
+        for offset, value in enumerate(nonzero):
+            rows[offset][col_index] = value
+    return freeze_grid(rows)
+
+
 class ArcGrammar:
     domain = "arc"
 
@@ -100,6 +126,22 @@ class ArcGrammar:
                 name="crop-nonzero",
                 semantics={"type": "crop_nonzero"},
                 executor=_crop_nonzero,
+                complexity=2,
+            )
+        )
+        programs.append(
+            make_arc_program(
+                name="gravity-down",
+                semantics={"type": "gravity_down"},
+                executor=_gravity_down,
+                complexity=2,
+            )
+        )
+        programs.append(
+            make_arc_program(
+                name="gravity-up",
+                semantics={"type": "gravity_up"},
+                executor=_gravity_up,
                 complexity=2,
             )
         )

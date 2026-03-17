@@ -157,6 +157,31 @@ def test_baseline_core_crop_primitive_solves_smoke_split(
     assert manifest.tasks[0].best_program_name == "crop-nonzero"
 
 
+def test_baseline_core_gravity_primitives_solve_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="baseline-core",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_gravity_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=8,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 2
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 2
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
+    assert {task.best_strategy for task in manifest.tasks} == {"grammar-primitives"}
+    assert best_programs["gravity_down"] == "gravity-down"
+    assert best_programs["gravity_up"] == "gravity-up"
+
+
 def test_cross_reference_strategies_solve_recovery_smoke_split(
     arc_fixture_dir: Path,
     repo_root: Path,
