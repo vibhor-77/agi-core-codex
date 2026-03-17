@@ -30,6 +30,9 @@ from agi_core_codex.domains.arc.strategies.separator_propagation import (
     SeparatorPropagationStrategy,
 )
 from agi_core_codex.domains.arc.strategies.template_stamp import TemplateStampStrategy
+from agi_core_codex.domains.arc.strategies.zero_square_fill import (
+    ZeroSquareFillStrategy,
+)
 
 __all__ = [
     "AbsolutePatchStrategy",
@@ -48,4 +51,5 @@ __all__ = [
     "SeparatorPropagationStrategy",
     "SeparatorCrossReferenceStrategy",
     "TemplateStampStrategy",
+    "ZeroSquareFillStrategy",
 ]

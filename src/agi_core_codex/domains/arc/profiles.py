@@ -20,6 +20,7 @@ from agi_core_codex.domains.arc.strategies import (
     SeparatorPropagationStrategy,
     SeparatorCrossReferenceStrategy,
     TemplateStampStrategy,
+    ZeroSquareFillStrategy,
 )
 
 
@@ -40,6 +41,7 @@ def _instantiate(name: str):
         "arc-separator-propagation": SeparatorPropagationStrategy,
         "arc-scale-tile": ScaleTileStrategy,
         "arc-template-stamp": TemplateStampStrategy,
+        "arc-zero-square-fill": ZeroSquareFillStrategy,
         "arc-constant-output": ConstantOutputStrategy,
         "arc-color-map": ColorMapStrategy,
         "arc-absolute-patch": AbsolutePatchStrategy,
@@ -62,6 +64,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-separator-cross-reference",
             "arc-scale-tile",
             "arc-template-stamp",
+            "arc-zero-square-fill",
             "arc-extract-transform",
             "arc-interior-extract",
             "arc-bottom-center-marker",
@@ -83,6 +86,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-separator-cross-reference",
             "arc-scale-tile",
             "arc-template-stamp",
+            "arc-zero-square-fill",
             "arc-extract-transform",
             "arc-interior-extract",
             "arc-bottom-center-marker",

@@ -363,6 +363,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-separator-cross-reference",
         "arc-scale-tile",
         "arc-template-stamp",
+        "arc-zero-square-fill",
         "arc-extract-transform",
         "arc-interior-extract",
         "arc-bottom-center-marker",
@@ -606,3 +607,26 @@ def test_bbox_recolor_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-bbox-recolor"
     assert manifest.tasks[0].best_program_name == "bbox-recolor-1-to-3-inside-8"
+
+
+def test_zero_square_fill_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_zero_square_fill_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=89,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-zero-square-fill"
+    assert manifest.tasks[0].best_program_name == "fill-zero-component-squares-1"
