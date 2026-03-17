@@ -2,6 +2,7 @@ from agi_core_codex.domains.arc.strategies.absolute_patch import AbsolutePatchSt
 from agi_core_codex.domains.arc.strategies.bbox_ring_marker_projection import (
     BboxRingMarkerProjectionStrategy,
 )
+from agi_core_codex.domains.arc.strategies.bbox_recolor import BboxRecolorStrategy
 from agi_core_codex.domains.arc.strategies.bottom_center_marker import (
     BottomCenterMarkerStrategy,
 )
@@ -33,6 +34,7 @@ from agi_core_codex.domains.arc.strategies.template_stamp import TemplateStampSt
 __all__ = [
     "AbsolutePatchStrategy",
     "BboxRingMarkerProjectionStrategy",
+    "BboxRecolorStrategy",
     "BottomCenterMarkerStrategy",
     "BooleanHalvesStrategy",
     "ColorMapStrategy",
