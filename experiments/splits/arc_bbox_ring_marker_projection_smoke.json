@@ -1,0 +1,11 @@
+{
+  "benchmark": "arc-fixtures",
+  "dataset_split": "training",
+  "name": "arc_bbox_ring_marker_projection_smoke",
+  "seed": 79,
+  "source_dataset_dir": "tests/fixtures/arc",
+  "split_kind": "smoke",
+  "task_ids": [
+    "bbox_ring_marker_projection"
+  ]
+}

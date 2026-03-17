@@ -366,6 +366,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-extract-transform",
         "arc-interior-extract",
         "arc-bottom-center-marker",
+        "arc-bbox-ring-marker-projection",
         "arc-rectangle-marker-projection",
         "grammar-primitives",
         "arc-constant-output",
@@ -558,3 +559,26 @@ def test_rectangle_marker_projection_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-rectangle-marker-projection"
     assert manifest.tasks[0].best_program_name == "project-markers-into-rectangle"
+
+
+def test_bbox_ring_marker_projection_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_bbox_ring_marker_projection_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=79,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-bbox-ring-marker-projection"
+    assert manifest.tasks[0].best_program_name == "project-markers-to-bbox-ring"
