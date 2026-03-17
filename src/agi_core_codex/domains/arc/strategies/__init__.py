@@ -1,4 +1,7 @@
 from agi_core_codex.domains.arc.strategies.absolute_patch import AbsolutePatchStrategy
+from agi_core_codex.domains.arc.strategies.bottom_center_marker import (
+    BottomCenterMarkerStrategy,
+)
 from agi_core_codex.domains.arc.strategies.color_map import ColorMapStrategy
 from agi_core_codex.domains.arc.strategies.constant_output import ConstantOutputStrategy
 from agi_core_codex.domains.arc.strategies.cross_reference import (
@@ -23,6 +26,7 @@ from agi_core_codex.domains.arc.strategies.template_stamp import TemplateStampSt
 
 __all__ = [
     "AbsolutePatchStrategy",
+    "BottomCenterMarkerStrategy",
     "BooleanHalvesStrategy",
     "ColorMapStrategy",
     "ConstantOutputStrategy",

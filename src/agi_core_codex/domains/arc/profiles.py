@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from agi_core_codex.core.strategies import GrammarPrimitiveStrategy, LibraryReplayStrategy
 from agi_core_codex.domains.arc.strategies import (
     AbsolutePatchStrategy,
+    BottomCenterMarkerStrategy,
     BooleanHalvesStrategy,
     ColorMapStrategy,
     ConstantOutputStrategy,
@@ -24,6 +25,7 @@ def _instantiate(name: str):
         "library-replay": LibraryReplayStrategy,
         "grammar-primitives": GrammarPrimitiveStrategy,
         "arc-boolean-halves": BooleanHalvesStrategy,
+        "arc-bottom-center-marker": BottomCenterMarkerStrategy,
         "arc-extract-transform": ExtractTransformStrategy,
         "arc-interior-extract": InteriorExtractStrategy,
         "arc-ray-extension": RayExtensionStrategy,
@@ -56,6 +58,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-template-stamp",
             "arc-extract-transform",
             "arc-interior-extract",
+            "arc-bottom-center-marker",
             "grammar-primitives",
             "arc-constant-output",
             "arc-color-map",
@@ -73,6 +76,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-template-stamp",
             "arc-extract-transform",
             "arc-interior-extract",
+            "arc-bottom-center-marker",
             "grammar-primitives",
             "arc-constant-output",
             "arc-color-map",
