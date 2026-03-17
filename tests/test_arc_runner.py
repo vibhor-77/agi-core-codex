@@ -182,6 +182,84 @@ def test_baseline_core_gravity_primitives_solve_smoke_split(
     assert best_programs["gravity_up"] == "gravity-up"
 
 
+def test_baseline_core_tile_family_primitives_solve_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="baseline-core",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_tile_family_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=37,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 3
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 3
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
+    assert {task.best_strategy for task in manifest.tasks} == {"grammar-primitives"}
+    assert best_programs["tile_horizontal"] == "tile-horizontal"
+    assert best_programs["mirror_tile_horizontal"] == "mirror-tile-horizontal"
+    assert best_programs["mirror_tile_vertical"] == "mirror-tile-vertical"
+
+
+def test_baseline_core_extraction_and_inpaint_primitives_solve_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="baseline-core",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_extraction_inpaint_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=43,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 3
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 3
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
+    assert {task.best_strategy for task in manifest.tasks} == {"grammar-primitives"}
+    assert best_programs["extract_largest_cc"] == "extract-largest-cc"
+    assert best_programs["extract_unique_color_region"] == "extract-unique-color-region"
+    assert best_programs["inpaint_periodic"] == "inpaint-periodic"
+
+
+def test_baseline_core_symmetry_tile_primitives_solve_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="baseline-core",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_symmetry_tile_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=47,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 3
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 3
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
+    assert {task.best_strategy for task in manifest.tasks} == {"grammar-primitives"}
+    assert best_programs["mirror_tile_both"] == "mirror-tile-both"
+    assert best_programs["rotate_tile_clockwise"] == "rotate-tile-clockwise"
+    assert best_programs["inpaint_by_symmetry"] == "inpaint-by-symmetry"
+
+
 def test_cross_reference_strategies_solve_recovery_smoke_split(
     arc_fixture_dir: Path,
     repo_root: Path,
