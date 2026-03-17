@@ -17,6 +17,7 @@ This repository starts with ARC as the first implemented domain and keeps room f
   - boolean halves cross-reference
   - separator-based cross-reference
   - scale/tile/downscale ratio detection
+  - template stamping
   - constant-output synthesis
   - consistent color-map synthesis
   - task-scoped absolute patch synthesis

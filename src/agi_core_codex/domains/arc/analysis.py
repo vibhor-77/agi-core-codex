@@ -1,8 +1,18 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+from collections import Counter
+from dataclasses import dataclass
 
 from agi_core_codex.domains.arc.types import Grid, freeze_grid, grid_shape
+
+
+@dataclass(frozen=True)
+class Component:
+    color: int
+    pixels: tuple[tuple[int, int], ...]
+    size: int
+    bbox: tuple[int, int, int, int]
 
 
 def nonzero_mask(grid: Grid) -> Grid:
@@ -101,3 +111,51 @@ def cells_share_shape(cells: tuple[tuple[Grid, ...], ...]) -> bool:
     expected_shape = grid_shape(flat[0][2])
     return all(grid_shape(cell) == expected_shape for _, _, cell in flat)
 
+
+def background_color(grid: Grid) -> int:
+    counts = Counter(cell for row in grid for cell in row)
+    return counts.most_common(1)[0][0]
+
+
+def connected_components(grid: Grid, *, bg_color: int | None = None) -> tuple[Component, ...]:
+    height, width = grid_shape(grid)
+    if bg_color is None:
+        bg_color = background_color(grid)
+
+    visited: set[tuple[int, int]] = set()
+    components: list[Component] = []
+    for row_index in range(height):
+        for col_index in range(width):
+            color = grid[row_index][col_index]
+            if color == bg_color or (row_index, col_index) in visited:
+                continue
+
+            stack = [(row_index, col_index)]
+            pixels = []
+            visited.add((row_index, col_index))
+            while stack:
+                current_row, current_col = stack.pop()
+                pixels.append((current_row, current_col))
+                for delta_row, delta_col in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    next_row = current_row + delta_row
+                    next_col = current_col + delta_col
+                    if not (0 <= next_row < height and 0 <= next_col < width):
+                        continue
+                    if (next_row, next_col) in visited:
+                        continue
+                    if grid[next_row][next_col] != color:
+                        continue
+                    visited.add((next_row, next_col))
+                    stack.append((next_row, next_col))
+
+            rows = [row for row, _ in pixels]
+            cols = [col for _, col in pixels]
+            components.append(
+                Component(
+                    color=color,
+                    pixels=tuple(sorted(pixels)),
+                    size=len(pixels),
+                    bbox=(min(rows), min(cols), max(rows), max(cols)),
+                )
+            )
+    return tuple(components)

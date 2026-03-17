@@ -6,6 +6,7 @@ from agi_core_codex.domains.arc.strategies.cross_reference import (
     SeparatorCrossReferenceStrategy,
 )
 from agi_core_codex.domains.arc.strategies.scale_tile import ScaleTileStrategy
+from agi_core_codex.domains.arc.strategies.template_stamp import TemplateStampStrategy
 
 __all__ = [
     "AbsolutePatchStrategy",
@@ -14,4 +15,5 @@ __all__ = [
     "ConstantOutputStrategy",
     "ScaleTileStrategy",
     "SeparatorCrossReferenceStrategy",
+    "TemplateStampStrategy",
 ]

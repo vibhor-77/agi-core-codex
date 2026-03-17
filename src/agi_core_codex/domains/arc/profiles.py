@@ -10,6 +10,7 @@ from agi_core_codex.domains.arc.strategies import (
     ConstantOutputStrategy,
     ScaleTileStrategy,
     SeparatorCrossReferenceStrategy,
+    TemplateStampStrategy,
 )
 
 
@@ -20,6 +21,7 @@ def _instantiate(name: str):
         "arc-boolean-halves": BooleanHalvesStrategy,
         "arc-separator-cross-reference": SeparatorCrossReferenceStrategy,
         "arc-scale-tile": ScaleTileStrategy,
+        "arc-template-stamp": TemplateStampStrategy,
         "arc-constant-output": ConstantOutputStrategy,
         "arc-color-map": ColorMapStrategy,
         "arc-absolute-patch": AbsolutePatchStrategy,
@@ -38,6 +40,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-boolean-halves",
             "arc-separator-cross-reference",
             "arc-scale-tile",
+            "arc-template-stamp",
             "grammar-primitives",
             "arc-constant-output",
             "arc-color-map",
@@ -49,6 +52,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-boolean-halves",
             "arc-separator-cross-reference",
             "arc-scale-tile",
+            "arc-template-stamp",
             "grammar-primitives",
             "arc-constant-output",
             "arc-color-map",
