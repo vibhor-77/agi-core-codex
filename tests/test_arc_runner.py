@@ -153,6 +153,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
     metrics = manifest.metrics_as_dict()
     assert metrics["solved_train"] == 0
     assert manifest.strategy_set == (
+        "arc-separator-propagation",
         "arc-separator-cross-reference",
         "arc-scale-tile",
         "arc-template-stamp",
@@ -205,3 +206,25 @@ def test_template_stamp_strategy_solves_smoke_task(
     assert metrics["solved_train"] == metrics["task_count"] == 1
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-template-stamp"
+
+
+def test_separator_propagation_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_separator_propagation_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=31,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-separator-propagation"

@@ -96,6 +96,25 @@ def split_grid_by_separators(
     return tuple(cells)
 
 
+def merge_cells_by_separators(
+    base_grid: Grid,
+    row_separators: Sequence[int],
+    col_separators: Sequence[int],
+    cells: tuple[tuple[Grid, ...], ...],
+) -> Grid:
+    height, width = grid_shape(base_grid)
+    row_segments = _segments(height, row_separators)
+    col_segments = _segments(width, col_separators)
+    rows = [list(row) for row in base_grid]
+    for row_index, (row_start, row_end) in enumerate(row_segments):
+        for col_index, (col_start, col_end) in enumerate(col_segments):
+            cell = cells[row_index][col_index]
+            for local_row, global_row in enumerate(range(row_start, row_end)):
+                for local_col, global_col in enumerate(range(col_start, col_end)):
+                    rows[global_row][global_col] = cell[local_row][local_col]
+    return freeze_grid(rows)
+
+
 def flatten_cells(cells: tuple[tuple[Grid, ...], ...]) -> tuple[tuple[int, int, Grid], ...]:
     return tuple(
         (row_index, col_index, cell)

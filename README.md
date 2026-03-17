@@ -15,6 +15,7 @@ This repository starts with ARC as the first implemented domain and keeps room f
 - ARC support implemented as a plugin layer with named strategies:
   - grammar primitives
   - boolean halves cross-reference
+  - separator-grid row/column propagation
   - separator-based cross-reference
   - scale/tile/downscale ratio detection
   - template stamping
