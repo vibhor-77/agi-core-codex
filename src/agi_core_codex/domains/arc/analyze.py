@@ -10,6 +10,7 @@ from agi_core_codex.core.manifests import load_manifest
 from agi_core_codex.domains.arc.analysis import (
     background_color,
     connected_components,
+    fill_enclosed,
     find_uniform_col_separators,
     find_uniform_row_separators,
     intersect_separators,
@@ -229,45 +230,6 @@ def _gravity_right(grid: Grid) -> Grid:
         nonzero = [cell for cell in row if cell != 0]
         for offset, value in enumerate(nonzero):
             rows[row_index][width - len(nonzero) + offset] = value
-    return freeze_grid(rows)
-
-
-def _fill_enclosed(grid: Grid) -> Grid:
-    if not grid:
-        return ()
-    height, width = grid_shape(grid)
-    nonzero = [grid[row_index][col_index] for row_index in range(height) for col_index in range(width) if grid[row_index][col_index] != 0]
-    if not nonzero:
-        return grid
-    fill_color = Counter(nonzero).most_common(1)[0][0]
-    reachable: set[tuple[int, int]] = set()
-    stack: list[tuple[int, int]] = []
-    for row_index in range(height):
-        for col_index in (0, width - 1):
-            if grid[row_index][col_index] == 0 and (row_index, col_index) not in reachable:
-                reachable.add((row_index, col_index))
-                stack.append((row_index, col_index))
-    for col_index in range(width):
-        for row_index in (0, height - 1):
-            if grid[row_index][col_index] == 0 and (row_index, col_index) not in reachable:
-                reachable.add((row_index, col_index))
-                stack.append((row_index, col_index))
-    while stack:
-        current_row, current_col = stack.pop()
-        for delta_row, delta_col in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            next_row = current_row + delta_row
-            next_col = current_col + delta_col
-            if not (0 <= next_row < height and 0 <= next_col < width):
-                continue
-            if grid[next_row][next_col] != 0 or (next_row, next_col) in reachable:
-                continue
-            reachable.add((next_row, next_col))
-            stack.append((next_row, next_col))
-    rows = [list(row) for row in grid]
-    for row_index in range(height):
-        for col_index in range(width):
-            if grid[row_index][col_index] == 0 and (row_index, col_index) not in reachable:
-                rows[row_index][col_index] = fill_color
     return freeze_grid(rows)
 
 
@@ -557,7 +519,7 @@ def candidate_catalog() -> tuple[CandidateDefinition, ...]:
         CandidateDefinition("invert-colors", "old_unary", 2, False, _invert_colors),
         CandidateDefinition("gravity-left", "old_unary", 2, False, _gravity_left),
         CandidateDefinition("gravity-right", "old_unary", 2, False, _gravity_right),
-        CandidateDefinition("fill-enclosed", "old_unary", 2, False, _fill_enclosed),
+        CandidateDefinition("fill-enclosed", "old_unary", 2, False, fill_enclosed),
         CandidateDefinition("dilate", "old_unary", 2, False, _dilate),
         CandidateDefinition("erode", "old_unary", 2, False, _erode),
         CandidateDefinition(

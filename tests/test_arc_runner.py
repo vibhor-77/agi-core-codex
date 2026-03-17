@@ -285,6 +285,29 @@ def test_extract_transform_strategy_solves_smoke_split(
     assert best_programs["crop_flip_horizontal"] == "crop-nonzero-then-flip-horizontal"
 
 
+def test_interior_extract_strategy_solves_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_interior_extract_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=59,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert {task.best_strategy for task in manifest.tasks} == {"arc-interior-extract"}
+    assert manifest.tasks[0].best_program_name == "extract-enclosed-interior-recolor-3"
+
+
 def test_cross_reference_strategies_solve_recovery_smoke_split(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -341,6 +364,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-scale-tile",
         "arc-template-stamp",
         "arc-extract-transform",
+        "arc-interior-extract",
         "grammar-primitives",
         "arc-constant-output",
         "arc-color-map",
