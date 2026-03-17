@@ -15,6 +15,9 @@ from agi_core_codex.domains.arc.strategies.interior_extract import (
     InteriorExtractStrategy,
 )
 from agi_core_codex.domains.arc.strategies.ray_extension import RayExtensionStrategy
+from agi_core_codex.domains.arc.strategies.rectangle_marker_projection import (
+    RectangleMarkerProjectionStrategy,
+)
 from agi_core_codex.domains.arc.strategies.row_column import (
     RowColumnDecompositionStrategy,
 )
@@ -33,6 +36,7 @@ __all__ = [
     "ExtractTransformStrategy",
     "InteriorExtractStrategy",
     "RayExtensionStrategy",
+    "RectangleMarkerProjectionStrategy",
     "ScaleTileStrategy",
     "RowColumnDecompositionStrategy",
     "SeparatorPropagationStrategy",

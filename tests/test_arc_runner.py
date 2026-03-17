@@ -366,6 +366,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-extract-transform",
         "arc-interior-extract",
         "arc-bottom-center-marker",
+        "arc-rectangle-marker-projection",
         "grammar-primitives",
         "arc-constant-output",
         "arc-color-map",
@@ -534,3 +535,26 @@ def test_bottom_center_marker_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-bottom-center-marker"
     assert manifest.tasks[0].best_program_name == "bottom-center-markers-4"
+
+
+def test_rectangle_marker_projection_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_rectangle_marker_projection_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=71,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-rectangle-marker-projection"
+    assert manifest.tasks[0].best_program_name == "project-markers-into-rectangle"
