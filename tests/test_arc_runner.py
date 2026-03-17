@@ -366,6 +366,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-zero-square-fill",
         "arc-extract-transform",
         "arc-interior-extract",
+        "arc-motif-completion",
         "arc-bottom-center-marker",
         "arc-bbox-recolor",
         "arc-bbox-ring-marker-projection",
@@ -630,3 +631,26 @@ def test_zero_square_fill_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-zero-square-fill"
     assert manifest.tasks[0].best_program_name == "fill-zero-component-squares-1"
+
+
+def test_motif_completion_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_motif_completion_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=97,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-motif-completion"
+    assert manifest.tasks[0].best_program_name == "complete-anchor-motifs"

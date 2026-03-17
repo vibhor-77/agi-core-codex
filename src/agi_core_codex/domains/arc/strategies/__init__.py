@@ -18,6 +18,9 @@ from agi_core_codex.domains.arc.strategies.extract_transform import (
 from agi_core_codex.domains.arc.strategies.interior_extract import (
     InteriorExtractStrategy,
 )
+from agi_core_codex.domains.arc.strategies.motif_completion import (
+    MotifCompletionStrategy,
+)
 from agi_core_codex.domains.arc.strategies.ray_extension import RayExtensionStrategy
 from agi_core_codex.domains.arc.strategies.rectangle_marker_projection import (
     RectangleMarkerProjectionStrategy,
@@ -44,6 +47,7 @@ __all__ = [
     "ConstantOutputStrategy",
     "ExtractTransformStrategy",
     "InteriorExtractStrategy",
+    "MotifCompletionStrategy",
     "RayExtensionStrategy",
     "RectangleMarkerProjectionStrategy",
     "ScaleTileStrategy",

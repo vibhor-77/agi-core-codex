@@ -21,6 +21,7 @@ This repository starts with ARC as the first implemented domain and keeps room f
   - separator-based cross-reference and cell reductions
   - scale/tile/downscale ratio detection
   - template stamping
+  - anchor-based motif completion
   - constant-output synthesis
   - consistent color-map synthesis
   - task-scoped absolute patch synthesis
@@ -48,10 +49,10 @@ python -m agi_core_codex arc-accuracy tune \
 
 ## Current ARC-AGI-1 snapshot
 
-Latest accepted checkpoint on `main`: `5b993cd` from March 17, 2026.
+Latest accepted checkpoint on `main`: `3b91c50` from March 17, 2026.
 
 - `train-dev`: `42/320` exact on train examples, `47/320` exact on test examples
-- `train-val`: `15/80` exact on train examples, `15/80` exact on test examples
+- `train-val`: `16/80` exact on train examples, `16/80` exact on test examples
 - `public-eval`: `17/400` exact on test examples, which is `4.25%`
 
 These numbers are exact-match rates from the current `arc-accuracy` profile. Public eval
