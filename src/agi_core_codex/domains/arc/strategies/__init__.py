@@ -5,6 +5,9 @@ from agi_core_codex.domains.arc.strategies.cross_reference import (
     BooleanHalvesStrategy,
     SeparatorCrossReferenceStrategy,
 )
+from agi_core_codex.domains.arc.strategies.extract_transform import (
+    ExtractTransformStrategy,
+)
 from agi_core_codex.domains.arc.strategies.ray_extension import RayExtensionStrategy
 from agi_core_codex.domains.arc.strategies.row_column import (
     RowColumnDecompositionStrategy,
@@ -20,6 +23,7 @@ __all__ = [
     "BooleanHalvesStrategy",
     "ColorMapStrategy",
     "ConstantOutputStrategy",
+    "ExtractTransformStrategy",
     "RayExtensionStrategy",
     "ScaleTileStrategy",
     "RowColumnDecompositionStrategy",

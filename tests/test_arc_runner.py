@@ -260,6 +260,31 @@ def test_baseline_core_symmetry_tile_primitives_solve_smoke_split(
     assert best_programs["inpaint_by_symmetry"] == "inpaint-by-symmetry"
 
 
+def test_extract_transform_strategy_solves_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_extract_transform_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=53,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 2
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 2
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
+    assert {task.best_strategy for task in manifest.tasks} == {"arc-extract-transform"}
+    assert best_programs["crop_tile_horizontal"] == "crop-nonzero-then-tile-horizontal"
+    assert best_programs["crop_flip_horizontal"] == "crop-nonzero-then-flip-horizontal"
+
+
 def test_cross_reference_strategies_solve_recovery_smoke_split(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -315,6 +340,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-separator-cross-reference",
         "arc-scale-tile",
         "arc-template-stamp",
+        "arc-extract-transform",
         "grammar-primitives",
         "arc-constant-output",
         "arc-color-map",
