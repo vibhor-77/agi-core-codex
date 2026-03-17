@@ -5,11 +5,13 @@ from agi_core_codex.domains.arc.strategies.cross_reference import (
     BooleanHalvesStrategy,
     SeparatorCrossReferenceStrategy,
 )
+from agi_core_codex.domains.arc.strategies.scale_tile import ScaleTileStrategy
 
 __all__ = [
     "AbsolutePatchStrategy",
     "BooleanHalvesStrategy",
     "ColorMapStrategy",
     "ConstantOutputStrategy",
+    "ScaleTileStrategy",
     "SeparatorCrossReferenceStrategy",
 ]

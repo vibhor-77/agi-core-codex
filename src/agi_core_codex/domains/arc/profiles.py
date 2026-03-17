@@ -8,6 +8,7 @@ from agi_core_codex.domains.arc.strategies import (
     BooleanHalvesStrategy,
     ColorMapStrategy,
     ConstantOutputStrategy,
+    ScaleTileStrategy,
     SeparatorCrossReferenceStrategy,
 )
 
@@ -18,6 +19,7 @@ def _instantiate(name: str):
         "grammar-primitives": GrammarPrimitiveStrategy,
         "arc-boolean-halves": BooleanHalvesStrategy,
         "arc-separator-cross-reference": SeparatorCrossReferenceStrategy,
+        "arc-scale-tile": ScaleTileStrategy,
         "arc-constant-output": ConstantOutputStrategy,
         "arc-color-map": ColorMapStrategy,
         "arc-absolute-patch": AbsolutePatchStrategy,
@@ -35,6 +37,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
         return (
             "arc-boolean-halves",
             "arc-separator-cross-reference",
+            "arc-scale-tile",
             "grammar-primitives",
             "arc-constant-output",
             "arc-color-map",
@@ -45,6 +48,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "library-replay",
             "arc-boolean-halves",
             "arc-separator-cross-reference",
+            "arc-scale-tile",
             "grammar-primitives",
             "arc-constant-output",
             "arc-color-map",
