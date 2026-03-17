@@ -8,6 +8,7 @@ from agi_core_codex.domains.arc.strategies import (
     BooleanHalvesStrategy,
     ColorMapStrategy,
     ConstantOutputStrategy,
+    RowColumnDecompositionStrategy,
     ScaleTileStrategy,
     SeparatorPropagationStrategy,
     SeparatorCrossReferenceStrategy,
@@ -20,6 +21,7 @@ def _instantiate(name: str):
         "library-replay": LibraryReplayStrategy,
         "grammar-primitives": GrammarPrimitiveStrategy,
         "arc-boolean-halves": BooleanHalvesStrategy,
+        "arc-row-column-decomposition": RowColumnDecompositionStrategy,
         "arc-separator-cross-reference": SeparatorCrossReferenceStrategy,
         "arc-separator-propagation": SeparatorPropagationStrategy,
         "arc-scale-tile": ScaleTileStrategy,
@@ -40,6 +42,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
     if profile == "arc-accuracy":
         return (
             "arc-boolean-halves",
+            "arc-row-column-decomposition",
             "arc-separator-propagation",
             "arc-separator-cross-reference",
             "arc-scale-tile",
@@ -53,6 +56,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
         return (
             "library-replay",
             "arc-boolean-halves",
+            "arc-row-column-decomposition",
             "arc-separator-propagation",
             "arc-separator-cross-reference",
             "arc-scale-tile",

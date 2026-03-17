@@ -158,6 +158,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
     metrics = manifest.metrics_as_dict()
     assert metrics["solved_train"] == 0
     assert manifest.strategy_set == (
+        "arc-row-column-decomposition",
         "arc-separator-propagation",
         "arc-separator-cross-reference",
         "arc-scale-tile",
@@ -189,6 +190,31 @@ def test_scale_tile_strategy_solves_ratio_smoke_split(
     assert metrics["solved_train"] == metrics["task_count"] == 3
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 3
     assert {task.best_strategy for task in manifest.tasks} == {"arc-scale-tile"}
+
+
+def test_row_column_strategy_solves_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_row_column_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=27,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 2
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 2
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
+    assert {task.best_strategy for task in manifest.tasks} == {"arc-row-column-decomposition"}
+    assert best_programs["sort_rows_by_nonzero"] == "sort-rows-by-nonzero-count-desc"
+    assert best_programs["sort_columns_by_sum"] == "sort-columns-by-sum-asc"
 
 
 def test_template_stamp_strategy_solves_smoke_task(

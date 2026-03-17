@@ -5,6 +5,9 @@ from agi_core_codex.domains.arc.strategies.cross_reference import (
     BooleanHalvesStrategy,
     SeparatorCrossReferenceStrategy,
 )
+from agi_core_codex.domains.arc.strategies.row_column import (
+    RowColumnDecompositionStrategy,
+)
 from agi_core_codex.domains.arc.strategies.scale_tile import ScaleTileStrategy
 from agi_core_codex.domains.arc.strategies.separator_propagation import (
     SeparatorPropagationStrategy,
@@ -17,6 +20,7 @@ __all__ = [
     "ColorMapStrategy",
     "ConstantOutputStrategy",
     "ScaleTileStrategy",
+    "RowColumnDecompositionStrategy",
     "SeparatorPropagationStrategy",
     "SeparatorCrossReferenceStrategy",
     "TemplateStampStrategy",
