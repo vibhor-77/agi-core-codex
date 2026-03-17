@@ -134,6 +134,29 @@ def test_baseline_core_color_primitives_solve_smoke_split(
     assert best_programs["swap_colors"] == "swap-colors-2-with-6"
 
 
+def test_baseline_core_crop_primitive_solves_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="baseline-core",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_crop_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=6,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "grammar-primitives"
+    assert manifest.tasks[0].best_program_name == "crop-nonzero"
+
+
 def test_cross_reference_strategies_solve_recovery_smoke_split(
     arc_fixture_dir: Path,
     repo_root: Path,

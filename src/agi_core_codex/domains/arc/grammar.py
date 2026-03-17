@@ -66,6 +66,25 @@ def _recolor_foreground(grid: Grid, color: int) -> Grid:
     )
 
 
+def _crop_nonzero(grid: Grid) -> Grid:
+    coords = [
+        (row_index, col_index)
+        for row_index, row in enumerate(grid)
+        for col_index, cell in enumerate(row)
+        if cell != 0
+    ]
+    if not coords:
+        return ()
+    rows = [row for row, _ in coords]
+    cols = [col for _, col in coords]
+    row_start, row_end = min(rows), max(rows)
+    col_start, col_end = min(cols), max(cols)
+    return freeze_grid(
+        row[col_start : col_end + 1]
+        for row in grid[row_start : row_end + 1]
+    )
+
+
 class ArcGrammar:
     domain = "arc"
 
@@ -76,6 +95,14 @@ class ArcGrammar:
 
     def enumerate_primitives(self, task: ArcTask) -> tuple[ProgramHandle, ...]:
         programs = list(self._static_primitives())
+        programs.append(
+            make_arc_program(
+                name="crop-nonzero",
+                semantics={"type": "crop_nonzero"},
+                executor=_crop_nonzero,
+                complexity=2,
+            )
+        )
         colors = task_colors(
             [example.input for example in task.train]
             + [example.output for example in task.train]
