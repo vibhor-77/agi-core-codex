@@ -44,6 +44,28 @@ def _replace_color(grid: Grid, source: int, target: int) -> Grid:
     )
 
 
+def _swap_colors(grid: Grid, first: int, second: int) -> Grid:
+    return freeze_grid(
+        tuple(
+            second if cell == first else first if cell == second else cell
+            for cell in row
+        )
+        for row in grid
+    )
+
+
+def _recolor_foreground(grid: Grid, color: int) -> Grid:
+    counts: dict[int, int] = {}
+    for row in grid:
+        for cell in row:
+            counts[cell] = counts.get(cell, 0) + 1
+    background = max(counts.items(), key=lambda item: item[1])[0]
+    return freeze_grid(
+        tuple(color if cell != background else cell for cell in row)
+        for row in grid
+    )
+
+
 class ArcGrammar:
     domain = "arc"
 
@@ -74,6 +96,29 @@ class ArcGrammar:
                         complexity=2,
                     )
                 )
+        for index, first in enumerate(colors):
+            for second in colors[index + 1 :]:
+                programs.append(
+                    make_arc_program(
+                        name=f"swap-colors-{first}-with-{second}",
+                        semantics={"type": "swap_colors", "first": first, "second": second},
+                        executor=lambda grid, first=first, second=second: _swap_colors(
+                            grid,
+                            first,
+                            second,
+                        ),
+                        complexity=2,
+                    )
+                )
+        for color in colors:
+            programs.append(
+                make_arc_program(
+                    name=f"recolor-foreground-{color}",
+                    semantics={"type": "recolor_foreground", "color": color},
+                    executor=lambda grid, color=color: _recolor_foreground(grid, color),
+                    complexity=2,
+                )
+            )
 
         return tuple(sorted(programs, key=lambda program: (program.cost.complexity, program.name, program.id)))
 

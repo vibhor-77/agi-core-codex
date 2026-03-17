@@ -13,7 +13,7 @@ This repository starts with ARC as the first implemented domain and keeps room f
 - Deterministic budgeted search with explicit failure handling.
 - Immutable run manifests and an artifact index for reproducible experiments.
 - ARC support implemented as a plugin layer with named strategies:
-  - grammar primitives
+  - grammar primitives, including targeted color swaps and foreground recoloring
   - boolean halves cross-reference
   - directional ray extension and masked span fill
   - row/column decomposition via explicit row and column sorting rules

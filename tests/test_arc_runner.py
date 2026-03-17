@@ -109,6 +109,31 @@ def test_profile_strategy_filtering_preserves_explicit_ablation_controls() -> No
     assert "arc-boolean-halves" in profile_strategy_names("arc-accuracy")
 
 
+def test_baseline_core_color_primitives_solve_smoke_split(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="baseline-core",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_color_grammar_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=5,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 2
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 2
+    best_programs = {task.task_key: task.best_program_name for task in manifest.tasks}
+    assert {task.best_strategy for task in manifest.tasks} == {"grammar-primitives"}
+    assert best_programs["recolor_foreground"] == "recolor-foreground-9"
+    assert best_programs["swap_colors"] == "swap-colors-2-with-6"
+
+
 def test_cross_reference_strategies_solve_recovery_smoke_split(
     arc_fixture_dir: Path,
     repo_root: Path,
