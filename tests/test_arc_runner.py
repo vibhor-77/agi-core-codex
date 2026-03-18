@@ -475,6 +475,29 @@ def test_orth_diagonal_halo_strategy_solves_smoke_task(
     assert manifest.tasks[0].best_program_name == "paint-1-orth-7-and-2-diagonal-4"
 
 
+def test_open_frame_fill_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_open_frame_fill_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=193,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-open-frame-fill"
+    assert manifest.tasks[0].best_program_name == "fill-open-frames-with-marker-color"
+
+
 def test_zero_rectangle_family_fill_strategy_solves_smoke_task(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -547,6 +570,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-relocate-shape-next-to-line",
         "arc-border-match-projection",
         "arc-orth-diagonal-halo",
+        "arc-open-frame-fill",
         "arc-ray-extension",
         "arc-row-column-decomposition",
         "arc-separator-propagation",

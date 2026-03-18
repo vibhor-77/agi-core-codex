@@ -39,6 +39,9 @@ from agi_core_codex.domains.arc.strategies.interior_extract import (
 from agi_core_codex.domains.arc.strategies.motif_completion import (
     MotifCompletionStrategy,
 )
+from agi_core_codex.domains.arc.strategies.open_frame_fill import (
+    OpenFrameFillStrategy,
+)
 from agi_core_codex.domains.arc.strategies.orth_diagonal_halo import (
     OrthDiagonalHaloStrategy,
 )
@@ -105,6 +108,7 @@ __all__ = [
     "HollowSolidRectanglesStrategy",
     "InteriorExtractStrategy",
     "MotifCompletionStrategy",
+    "OpenFrameFillStrategy",
     "OrthDiagonalHaloStrategy",
     "RayExtensionStrategy",
     "RelocateShapeNextToLineStrategy",

@@ -48,7 +48,7 @@ def test_write_train_splits_emits_metadata(
     train_val = json.loads(train_val_path.read_text())
     assert train_dev["split_kind"] == "train-dev"
     assert train_val["split_kind"] == "train-val"
-    assert train_dev["train_total_count"] == 61
+    assert train_dev["train_total_count"] == 62
     assert train_val["train_val_count"] == 2
     assert set(train_dev["task_ids"]).isdisjoint(set(train_val["task_ids"]))
 
