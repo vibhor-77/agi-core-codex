@@ -367,6 +367,8 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-zero-square-fill",
         "arc-extract-transform",
         "arc-hole-projection",
+        "arc-triomino-corner-fill",
+        "arc-collinear-gap-bridge",
         "arc-interior-extract",
         "arc-motif-completion",
         "arc-bottom-center-marker",
@@ -702,3 +704,49 @@ def test_hole_projection_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-hole-projection"
     assert manifest.tasks[0].best_program_name == "project-holes-along-short-axis"
+
+
+def test_triomino_corner_fill_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_triomino_corner_fill_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=107,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-triomino-corner-fill"
+    assert manifest.tasks[0].best_program_name == "fill-triomino-corners-8-with-1"
+
+
+def test_collinear_gap_bridge_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_collinear_gap_bridge_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=109,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-collinear-gap-bridge"
+    assert manifest.tasks[0].best_program_name == "bridge-horizontal-gaps-1-with-2"

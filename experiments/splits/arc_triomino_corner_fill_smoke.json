@@ -1,0 +1,11 @@
+{
+  "benchmark": "arc-fixtures",
+  "dataset_split": "training",
+  "name": "arc_triomino_corner_fill_smoke",
+  "seed": 107,
+  "source_dataset_dir": "tests/fixtures/arc",
+  "split_kind": "smoke",
+  "task_ids": [
+    "triomino_corner_fill"
+  ]
+}

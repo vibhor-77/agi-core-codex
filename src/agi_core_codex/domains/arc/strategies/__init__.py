@@ -6,6 +6,9 @@ from agi_core_codex.domains.arc.strategies.bbox_recolor import BboxRecolorStrate
 from agi_core_codex.domains.arc.strategies.bottom_center_marker import (
     BottomCenterMarkerStrategy,
 )
+from agi_core_codex.domains.arc.strategies.collinear_gap_bridge import (
+    CollinearGapBridgeStrategy,
+)
 from agi_core_codex.domains.arc.strategies.color_map import ColorMapStrategy
 from agi_core_codex.domains.arc.strategies.constant_output import ConstantOutputStrategy
 from agi_core_codex.domains.arc.strategies.cross_reference import (
@@ -36,6 +39,9 @@ from agi_core_codex.domains.arc.strategies.separator_propagation import (
     SeparatorPropagationStrategy,
 )
 from agi_core_codex.domains.arc.strategies.template_stamp import TemplateStampStrategy
+from agi_core_codex.domains.arc.strategies.triomino_corner_fill import (
+    TriominoCornerFillStrategy,
+)
 from agi_core_codex.domains.arc.strategies.zero_square_fill import (
     ZeroSquareFillStrategy,
 )
@@ -49,6 +55,7 @@ __all__ = [
     "BboxRecolorStrategy",
     "BottomCenterMarkerStrategy",
     "BooleanHalvesStrategy",
+    "CollinearGapBridgeStrategy",
     "ColorMapStrategy",
     "ConstantOutputStrategy",
     "ExtractTransformStrategy",
@@ -62,6 +69,7 @@ __all__ = [
     "SeparatorPropagationStrategy",
     "SeparatorCrossReferenceStrategy",
     "TemplateStampStrategy",
+    "TriominoCornerFillStrategy",
     "ZeroPatternPropagationStrategy",
     "ZeroSquareFillStrategy",
 ]
