@@ -52,6 +52,9 @@ from agi_core_codex.domains.arc.strategies.relocate_shape_next_to_line import (
 from agi_core_codex.domains.arc.strategies.recolor_isolated_singletons import (
     RecolorIsolatedSingletonsStrategy,
 )
+from agi_core_codex.domains.arc.strategies.right_parity_column_recolor import (
+    RightParityColumnRecolorStrategy,
+)
 from agi_core_codex.domains.arc.strategies.recolor_components_by_top_order import (
     RecolorComponentsByTopOrderStrategy,
 )
@@ -114,6 +117,7 @@ __all__ = [
     "RelocateShapeNextToLineStrategy",
     "RecolorComponentsByTopOrderStrategy",
     "RecolorIsolatedSingletonsStrategy",
+    "RightParityColumnRecolorStrategy",
     "RectangularRingRecolorStrategy",
     "RectangleMarkerProjectionStrategy",
     "ScaleTileStrategy",

@@ -498,6 +498,29 @@ def test_open_frame_fill_strategy_solves_smoke_task(
     assert manifest.tasks[0].best_program_name == "fill-open-frames-with-marker-color"
 
 
+def test_right_parity_column_recolor_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_right_parity_column_recolor_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=197,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-right-parity-column-recolor"
+    assert manifest.tasks[0].best_program_name == "recolor-right-parity-5-columns-to-3"
+
+
 def test_zero_rectangle_family_fill_strategy_solves_smoke_task(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -567,6 +590,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-alternating-diagonal-recolor",
         "arc-recolor-components-by-top-order",
         "arc-recolor-isolated-singletons",
+        "arc-right-parity-column-recolor",
         "arc-relocate-shape-next-to-line",
         "arc-border-match-projection",
         "arc-orth-diagonal-halo",
