@@ -360,6 +360,29 @@ def test_alternating_diagonal_recolor_strategy_solves_smoke_task(
     assert manifest.tasks[0].best_program_name == "recolor-odd-diagonal-chain-cells"
 
 
+def test_recolor_isolated_singletons_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_recolor_isolated_singletons_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=167,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-recolor-isolated-singletons"
+    assert manifest.tasks[0].best_program_name == "recolor-isolated-twos-to-ones"
+
+
 def test_zero_rectangle_family_fill_strategy_solves_smoke_task(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -427,6 +450,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
     assert metrics["solved_train"] == 0
     assert manifest.strategy_set == (
         "arc-alternating-diagonal-recolor",
+        "arc-recolor-isolated-singletons",
         "arc-ray-extension",
         "arc-row-column-decomposition",
         "arc-separator-propagation",

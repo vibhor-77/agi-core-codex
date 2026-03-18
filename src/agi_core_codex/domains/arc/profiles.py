@@ -20,6 +20,7 @@ from agi_core_codex.domains.arc.strategies import (
     InteriorExtractStrategy,
     MotifCompletionStrategy,
     RayExtensionStrategy,
+    RecolorIsolatedSingletonsStrategy,
     RectangularRingRecolorStrategy,
     RectangleMarkerProjectionStrategy,
     RowColumnDecompositionStrategy,
@@ -54,6 +55,7 @@ def _instantiate(name: str):
         "arc-interior-extract": InteriorExtractStrategy,
         "arc-motif-completion": MotifCompletionStrategy,
         "arc-ray-extension": RayExtensionStrategy,
+        "arc-recolor-isolated-singletons": RecolorIsolatedSingletonsStrategy,
         "arc-rectangular-ring-recolor": RectangularRingRecolorStrategy,
         "arc-rectangle-marker-projection": RectangleMarkerProjectionStrategy,
         "arc-row-column-decomposition": RowColumnDecompositionStrategy,
@@ -84,6 +86,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
     if profile == "arc-accuracy":
         return (
             "arc-alternating-diagonal-recolor",
+            "arc-recolor-isolated-singletons",
             "arc-boolean-halves",
             "arc-ray-extension",
             "arc-row-column-decomposition",
@@ -119,6 +122,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
         return (
             "library-replay",
             "arc-alternating-diagonal-recolor",
+            "arc-recolor-isolated-singletons",
             "arc-boolean-halves",
             "arc-ray-extension",
             "arc-row-column-decomposition",
