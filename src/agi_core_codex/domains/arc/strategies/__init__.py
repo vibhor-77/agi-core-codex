@@ -48,6 +48,9 @@ from agi_core_codex.domains.arc.strategies.solid_rectangle_extract import (
     SolidRectangleExtractStrategy,
 )
 from agi_core_codex.domains.arc.strategies.template_stamp import TemplateStampStrategy
+from agi_core_codex.domains.arc.strategies.template_propagation import (
+    TemplatePropagationStrategy,
+)
 from agi_core_codex.domains.arc.strategies.triomino_corner_fill import (
     TriominoCornerFillStrategy,
 )
@@ -81,6 +84,7 @@ __all__ = [
     "SeparatorCrossReferenceStrategy",
     "SolidRectangleExtractStrategy",
     "TemplateStampStrategy",
+    "TemplatePropagationStrategy",
     "TriominoCornerFillStrategy",
     "ZeroPatternPropagationStrategy",
     "ZeroSquareFillStrategy",
