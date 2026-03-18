@@ -59,7 +59,7 @@ python -m agi_core_codex arc-accuracy tune \
 Latest accepted checkpoint on `main`: March 17, 2026.
 
 - `train-dev`: `42/320` exact on train examples, `47/320` exact on test examples
-- `train-val`: `24/80` exact on train examples, `24/80` exact on test examples
+- `train-val`: `25/80` exact on train examples, `25/80` exact on test examples
 - `public-eval`: `17/400` exact on test examples, which is `4.25%`
 
 These numbers are exact-match rates from the current `arc-accuracy` profile. Public eval

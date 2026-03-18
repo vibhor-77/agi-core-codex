@@ -364,6 +364,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-scale-tile",
         "arc-template-stamp",
         "arc-template-propagation",
+        "arc-diagonal-cross-projection",
         "arc-zero-pattern-propagation",
         "arc-zero-square-fill",
         "arc-extract-transform",
@@ -501,6 +502,29 @@ def test_template_propagation_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-template-propagation"
     assert manifest.tasks[0].best_program_name == "propagate-largest-template"
+
+
+def test_diagonal_cross_projection_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_diagonal_cross_projection_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=149,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-diagonal-cross-projection"
+    assert manifest.tasks[0].best_program_name == "project-diagonal-cross"
 
 
 def test_separator_propagation_strategy_solves_smoke_task(

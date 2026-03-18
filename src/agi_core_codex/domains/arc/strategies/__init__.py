@@ -15,6 +15,9 @@ from agi_core_codex.domains.arc.strategies.cross_reference import (
     BooleanHalvesStrategy,
     SeparatorCrossReferenceStrategy,
 )
+from agi_core_codex.domains.arc.strategies.diagonal_cross_projection import (
+    DiagonalCrossProjectionStrategy,
+)
 from agi_core_codex.domains.arc.strategies.extract_transform import (
     ExtractTransformStrategy,
 )
@@ -70,6 +73,7 @@ __all__ = [
     "CollinearGapBridgeStrategy",
     "ColorMapStrategy",
     "ConstantOutputStrategy",
+    "DiagonalCrossProjectionStrategy",
     "ExtractTransformStrategy",
     "HoleProjectionStrategy",
     "InteriorExtractStrategy",
