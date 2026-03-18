@@ -337,6 +337,29 @@ def test_cross_reference_strategies_solve_recovery_smoke_split(
     assert best_programs["separator_majority_reduce"] == "cross-ref-majority_reduce-cells"
 
 
+def test_alternating_diagonal_recolor_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_alternating_diagonal_recolor_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=151,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-alternating-diagonal-recolor"
+    assert manifest.tasks[0].best_program_name == "recolor-odd-diagonal-chain-cells"
+
+
 def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -357,6 +380,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
     metrics = manifest.metrics_as_dict()
     assert metrics["solved_train"] == 0
     assert manifest.strategy_set == (
+        "arc-alternating-diagonal-recolor",
         "arc-ray-extension",
         "arc-row-column-decomposition",
         "arc-separator-propagation",

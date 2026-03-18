@@ -1,4 +1,7 @@
 from agi_core_codex.domains.arc.strategies.absolute_patch import AbsolutePatchStrategy
+from agi_core_codex.domains.arc.strategies.alternating_diagonal_recolor import (
+    AlternatingDiagonalRecolorStrategy,
+)
 from agi_core_codex.domains.arc.strategies.bbox_ring_marker_projection import (
     BboxRingMarkerProjectionStrategy,
 )
@@ -66,6 +69,7 @@ from agi_core_codex.domains.arc.strategies.zero_pattern_propagation import (
 
 __all__ = [
     "AbsolutePatchStrategy",
+    "AlternatingDiagonalRecolorStrategy",
     "BboxRingMarkerProjectionStrategy",
     "BboxRecolorStrategy",
     "BottomCenterMarkerStrategy",
