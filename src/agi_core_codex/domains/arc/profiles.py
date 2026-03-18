@@ -6,6 +6,7 @@ from agi_core_codex.core.strategies import GrammarPrimitiveStrategy, LibraryRepl
 from agi_core_codex.domains.arc.strategies import (
     AbsolutePatchStrategy,
     AlternatingDiagonalRecolorStrategy,
+    BarrierDirectionalFillStrategy,
     BboxRecolorStrategy,
     BboxRingMarkerProjectionStrategy,
     BorderMatchProjectionStrategy,
@@ -49,6 +50,7 @@ def _instantiate(name: str):
         "library-replay": LibraryReplayStrategy,
         "grammar-primitives": GrammarPrimitiveStrategy,
         "arc-alternating-diagonal-recolor": AlternatingDiagonalRecolorStrategy,
+        "arc-barrier-directional-fill": BarrierDirectionalFillStrategy,
         "arc-boolean-halves": BooleanHalvesStrategy,
         "arc-bbox-recolor": BboxRecolorStrategy,
         "arc-bbox-ring-marker-projection": BboxRingMarkerProjectionStrategy,
@@ -98,6 +100,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
     if profile == "arc-accuracy":
         return (
             "arc-alternating-diagonal-recolor",
+            "arc-barrier-directional-fill",
             "arc-recolor-components-by-top-order",
             "arc-recolor-isolated-singletons",
             "arc-right-parity-column-recolor",
@@ -140,6 +143,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
         return (
             "library-replay",
             "arc-alternating-diagonal-recolor",
+            "arc-barrier-directional-fill",
             "arc-recolor-components-by-top-order",
             "arc-recolor-isolated-singletons",
             "arc-right-parity-column-recolor",

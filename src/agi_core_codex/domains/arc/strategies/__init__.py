@@ -6,6 +6,9 @@ from agi_core_codex.domains.arc.strategies.bbox_ring_marker_projection import (
     BboxRingMarkerProjectionStrategy,
 )
 from agi_core_codex.domains.arc.strategies.bbox_recolor import BboxRecolorStrategy
+from agi_core_codex.domains.arc.strategies.barrier_directional_fill import (
+    BarrierDirectionalFillStrategy,
+)
 from agi_core_codex.domains.arc.strategies.border_match_projection import (
     BorderMatchProjectionStrategy,
 )
@@ -97,6 +100,7 @@ from agi_core_codex.domains.arc.strategies.zero_pattern_propagation import (
 __all__ = [
     "AbsolutePatchStrategy",
     "AlternatingDiagonalRecolorStrategy",
+    "BarrierDirectionalFillStrategy",
     "BboxRingMarkerProjectionStrategy",
     "BboxRecolorStrategy",
     "BorderMatchProjectionStrategy",
