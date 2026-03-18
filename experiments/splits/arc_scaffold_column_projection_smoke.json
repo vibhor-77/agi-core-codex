@@ -1,0 +1,11 @@
+{
+  "benchmark": "arc-fixtures",
+  "dataset_split": "training",
+  "name": "arc_scaffold_column_projection_smoke",
+  "seed": 131,
+  "source_dataset_dir": "tests/fixtures/arc",
+  "split_kind": "smoke",
+  "task_ids": [
+    "scaffold_column_projection"
+  ]
+}
