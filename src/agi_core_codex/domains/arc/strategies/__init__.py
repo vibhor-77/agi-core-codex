@@ -40,6 +40,9 @@ from agi_core_codex.domains.arc.strategies.ray_extension import RayExtensionStra
 from agi_core_codex.domains.arc.strategies.recolor_isolated_singletons import (
     RecolorIsolatedSingletonsStrategy,
 )
+from agi_core_codex.domains.arc.strategies.recolor_components_by_top_order import (
+    RecolorComponentsByTopOrderStrategy,
+)
 from agi_core_codex.domains.arc.strategies.rectangle_marker_projection import (
     RectangleMarkerProjectionStrategy,
 )
@@ -93,6 +96,7 @@ __all__ = [
     "InteriorExtractStrategy",
     "MotifCompletionStrategy",
     "RayExtensionStrategy",
+    "RecolorComponentsByTopOrderStrategy",
     "RecolorIsolatedSingletonsStrategy",
     "RectangularRingRecolorStrategy",
     "RectangleMarkerProjectionStrategy",
