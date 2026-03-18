@@ -1,0 +1,11 @@
+{
+  "benchmark": "arc-fixtures",
+  "dataset_split": "training",
+  "name": "arc_rectangular_ring_recolor_smoke",
+  "seed": 127,
+  "source_dataset_dir": "tests/fixtures/arc",
+  "split_kind": "smoke",
+  "task_ids": [
+    "rectangular_ring_recolor"
+  ]
+}

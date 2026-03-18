@@ -26,6 +26,7 @@ This repository starts with ARC as the first implemented domain and keeps room f
   - collinear gap bridging with inferred fill markers
   - hole projection from interior zero markers along the short axis
   - solid rectangle extraction from noisy connected components
+  - rectangular ring recoloring with task-inferred target colors
   - zero-pattern propagation from a learned displacement vector
   - constant-output synthesis
   - consistent color-map synthesis
@@ -57,7 +58,7 @@ python -m agi_core_codex arc-accuracy tune \
 Latest accepted checkpoint on `main`: March 17, 2026.
 
 - `train-dev`: `42/320` exact on train examples, `47/320` exact on test examples
-- `train-val`: `21/80` exact on train examples, `21/80` exact on test examples
+- `train-val`: `22/80` exact on train examples, `22/80` exact on test examples
 - `public-eval`: `17/400` exact on test examples, which is `4.25%`
 
 These numbers are exact-match rates from the current `arc-accuracy` profile. Public eval

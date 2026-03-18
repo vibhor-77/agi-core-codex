@@ -34,6 +34,9 @@ from agi_core_codex.domains.arc.strategies.rectangle_marker_projection import (
 from agi_core_codex.domains.arc.strategies.row_column import (
     RowColumnDecompositionStrategy,
 )
+from agi_core_codex.domains.arc.strategies.rectangular_ring_recolor import (
+    RectangularRingRecolorStrategy,
+)
 from agi_core_codex.domains.arc.strategies.scale_tile import ScaleTileStrategy
 from agi_core_codex.domains.arc.strategies.separator_propagation import (
     SeparatorPropagationStrategy,
@@ -66,6 +69,7 @@ __all__ = [
     "InteriorExtractStrategy",
     "MotifCompletionStrategy",
     "RayExtensionStrategy",
+    "RectangularRingRecolorStrategy",
     "RectangleMarkerProjectionStrategy",
     "ScaleTileStrategy",
     "RowColumnDecompositionStrategy",

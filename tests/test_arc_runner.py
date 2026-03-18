@@ -370,6 +370,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-triomino-corner-fill",
         "arc-collinear-gap-bridge",
         "arc-solid-rectangle-extract",
+        "arc-rectangular-ring-recolor",
         "arc-interior-extract",
         "arc-motif-completion",
         "arc-bottom-center-marker",
@@ -774,3 +775,26 @@ def test_solid_rectangle_extract_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-solid-rectangle-extract"
     assert manifest.tasks[0].best_program_name == "keep-max-solid-rectangles"
+
+
+def test_rectangular_ring_recolor_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_rectangular_ring_recolor_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=127,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-rectangular-ring-recolor"
+    assert manifest.tasks[0].best_program_name == "recolor-rectangular-rings-1-to-3"
