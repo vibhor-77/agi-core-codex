@@ -15,6 +15,9 @@ from agi_core_codex.domains.arc.strategies.cross_reference import (
 from agi_core_codex.domains.arc.strategies.extract_transform import (
     ExtractTransformStrategy,
 )
+from agi_core_codex.domains.arc.strategies.hole_projection import (
+    HoleProjectionStrategy,
+)
 from agi_core_codex.domains.arc.strategies.interior_extract import (
     InteriorExtractStrategy,
 )
@@ -49,6 +52,7 @@ __all__ = [
     "ColorMapStrategy",
     "ConstantOutputStrategy",
     "ExtractTransformStrategy",
+    "HoleProjectionStrategy",
     "InteriorExtractStrategy",
     "MotifCompletionStrategy",
     "RayExtensionStrategy",

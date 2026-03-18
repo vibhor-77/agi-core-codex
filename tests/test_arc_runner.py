@@ -366,6 +366,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-zero-pattern-propagation",
         "arc-zero-square-fill",
         "arc-extract-transform",
+        "arc-hole-projection",
         "arc-interior-extract",
         "arc-motif-completion",
         "arc-bottom-center-marker",
@@ -678,3 +679,26 @@ def test_zero_pattern_propagation_strategy_solves_smoke_task(
     assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
     assert manifest.tasks[0].best_strategy == "arc-zero-pattern-propagation"
     assert manifest.tasks[0].best_program_name == "propagate-zero-pattern"
+
+
+def test_hole_projection_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_hole_projection_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=103,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-hole-projection"
+    assert manifest.tasks[0].best_program_name == "project-holes-along-short-axis"

@@ -1,0 +1,11 @@
+{
+  "benchmark": "arc-fixtures",
+  "dataset_split": "training",
+  "name": "arc_hole_projection_smoke",
+  "seed": 103,
+  "source_dataset_dir": "tests/fixtures/arc",
+  "split_kind": "smoke",
+  "task_ids": [
+    "hole_projection"
+  ]
+}
