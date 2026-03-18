@@ -6,6 +6,9 @@ from agi_core_codex.domains.arc.strategies.bbox_ring_marker_projection import (
     BboxRingMarkerProjectionStrategy,
 )
 from agi_core_codex.domains.arc.strategies.bbox_recolor import BboxRecolorStrategy
+from agi_core_codex.domains.arc.strategies.border_match_projection import (
+    BorderMatchProjectionStrategy,
+)
 from agi_core_codex.domains.arc.strategies.bottom_center_marker import (
     BottomCenterMarkerStrategy,
 )
@@ -87,6 +90,7 @@ __all__ = [
     "AlternatingDiagonalRecolorStrategy",
     "BboxRingMarkerProjectionStrategy",
     "BboxRecolorStrategy",
+    "BorderMatchProjectionStrategy",
     "BottomCenterMarkerStrategy",
     "BooleanHalvesStrategy",
     "CollinearGapBridgeStrategy",
