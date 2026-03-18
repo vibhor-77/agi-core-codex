@@ -39,6 +39,9 @@ from agi_core_codex.domains.arc.strategies.interior_extract import (
 from agi_core_codex.domains.arc.strategies.motif_completion import (
     MotifCompletionStrategy,
 )
+from agi_core_codex.domains.arc.strategies.orth_diagonal_halo import (
+    OrthDiagonalHaloStrategy,
+)
 from agi_core_codex.domains.arc.strategies.ray_extension import RayExtensionStrategy
 from agi_core_codex.domains.arc.strategies.relocate_shape_next_to_line import (
     RelocateShapeNextToLineStrategy,
@@ -102,6 +105,7 @@ __all__ = [
     "HollowSolidRectanglesStrategy",
     "InteriorExtractStrategy",
     "MotifCompletionStrategy",
+    "OrthDiagonalHaloStrategy",
     "RayExtensionStrategy",
     "RelocateShapeNextToLineStrategy",
     "RecolorComponentsByTopOrderStrategy",
