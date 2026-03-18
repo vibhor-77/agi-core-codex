@@ -38,6 +38,9 @@ from agi_core_codex.domains.arc.strategies.scale_tile import ScaleTileStrategy
 from agi_core_codex.domains.arc.strategies.separator_propagation import (
     SeparatorPropagationStrategy,
 )
+from agi_core_codex.domains.arc.strategies.solid_rectangle_extract import (
+    SolidRectangleExtractStrategy,
+)
 from agi_core_codex.domains.arc.strategies.template_stamp import TemplateStampStrategy
 from agi_core_codex.domains.arc.strategies.triomino_corner_fill import (
     TriominoCornerFillStrategy,
@@ -68,6 +71,7 @@ __all__ = [
     "RowColumnDecompositionStrategy",
     "SeparatorPropagationStrategy",
     "SeparatorCrossReferenceStrategy",
+    "SolidRectangleExtractStrategy",
     "TemplateStampStrategy",
     "TriominoCornerFillStrategy",
     "ZeroPatternPropagationStrategy",
