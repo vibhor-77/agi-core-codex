@@ -27,6 +27,9 @@ from agi_core_codex.domains.arc.strategies.extract_transform import (
 from agi_core_codex.domains.arc.strategies.hole_projection import (
     HoleProjectionStrategy,
 )
+from agi_core_codex.domains.arc.strategies.hollow_solid_rectangles import (
+    HollowSolidRectanglesStrategy,
+)
 from agi_core_codex.domains.arc.strategies.interior_extract import (
     InteriorExtractStrategy,
 )
@@ -83,6 +86,7 @@ __all__ = [
     "DiagonalCrossProjectionStrategy",
     "ExtractTransformStrategy",
     "HoleProjectionStrategy",
+    "HollowSolidRectanglesStrategy",
     "InteriorExtractStrategy",
     "MotifCompletionStrategy",
     "RayExtensionStrategy",
