@@ -63,6 +63,9 @@ from agi_core_codex.domains.arc.strategies.triomino_corner_fill import (
 from agi_core_codex.domains.arc.strategies.zero_square_fill import (
     ZeroSquareFillStrategy,
 )
+from agi_core_codex.domains.arc.strategies.zero_rectangle_family_fill import (
+    ZeroRectangleFamilyFillStrategy,
+)
 from agi_core_codex.domains.arc.strategies.zero_pattern_propagation import (
     ZeroPatternPropagationStrategy,
 )
@@ -95,5 +98,6 @@ __all__ = [
     "TemplatePropagationStrategy",
     "TriominoCornerFillStrategy",
     "ZeroPatternPropagationStrategy",
+    "ZeroRectangleFamilyFillStrategy",
     "ZeroSquareFillStrategy",
 ]

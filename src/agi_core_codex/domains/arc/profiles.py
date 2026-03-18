@@ -31,6 +31,7 @@ from agi_core_codex.domains.arc.strategies import (
     TemplatePropagationStrategy,
     TriominoCornerFillStrategy,
     ZeroPatternPropagationStrategy,
+    ZeroRectangleFamilyFillStrategy,
     ZeroSquareFillStrategy,
 )
 
@@ -63,6 +64,7 @@ def _instantiate(name: str):
         "arc-solid-rectangle-extract": SolidRectangleExtractStrategy,
         "arc-triomino-corner-fill": TriominoCornerFillStrategy,
         "arc-zero-pattern-propagation": ZeroPatternPropagationStrategy,
+        "arc-zero-rectangle-family-fill": ZeroRectangleFamilyFillStrategy,
         "arc-zero-square-fill": ZeroSquareFillStrategy,
         "arc-constant-output": ConstantOutputStrategy,
         "arc-color-map": ColorMapStrategy,
@@ -89,6 +91,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-template-stamp",
             "arc-template-propagation",
             "arc-diagonal-cross-projection",
+            "arc-zero-rectangle-family-fill",
             "arc-zero-pattern-propagation",
             "arc-zero-square-fill",
             "arc-extract-transform",
@@ -122,6 +125,7 @@ def profile_strategy_names(profile: str) -> tuple[str, ...]:
             "arc-template-stamp",
             "arc-template-propagation",
             "arc-diagonal-cross-projection",
+            "arc-zero-rectangle-family-fill",
             "arc-zero-pattern-propagation",
             "arc-zero-square-fill",
             "arc-extract-transform",

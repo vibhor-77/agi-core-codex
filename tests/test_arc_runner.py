@@ -360,6 +360,29 @@ def test_alternating_diagonal_recolor_strategy_solves_smoke_task(
     assert manifest.tasks[0].best_program_name == "recolor-odd-diagonal-chain-cells"
 
 
+def test_zero_rectangle_family_fill_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_zero_rectangle_family_fill_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=157,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-zero-rectangle-family-fill"
+    assert manifest.tasks[0].best_program_name == "fill-largest-zero-rectangle-families"
+
+
 def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -389,6 +412,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-template-stamp",
         "arc-template-propagation",
         "arc-diagonal-cross-projection",
+        "arc-zero-rectangle-family-fill",
         "arc-zero-pattern-propagation",
         "arc-zero-square-fill",
         "arc-extract-transform",
