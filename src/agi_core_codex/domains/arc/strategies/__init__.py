@@ -37,6 +37,9 @@ from agi_core_codex.domains.arc.strategies.motif_completion import (
     MotifCompletionStrategy,
 )
 from agi_core_codex.domains.arc.strategies.ray_extension import RayExtensionStrategy
+from agi_core_codex.domains.arc.strategies.relocate_shape_next_to_line import (
+    RelocateShapeNextToLineStrategy,
+)
 from agi_core_codex.domains.arc.strategies.recolor_isolated_singletons import (
     RecolorIsolatedSingletonsStrategy,
 )
@@ -96,6 +99,7 @@ __all__ = [
     "InteriorExtractStrategy",
     "MotifCompletionStrategy",
     "RayExtensionStrategy",
+    "RelocateShapeNextToLineStrategy",
     "RecolorComponentsByTopOrderStrategy",
     "RecolorIsolatedSingletonsStrategy",
     "RectangularRingRecolorStrategy",

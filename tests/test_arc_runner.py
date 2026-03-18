@@ -406,6 +406,29 @@ def test_recolor_components_by_top_order_strategy_solves_smoke_task(
     assert manifest.tasks[0].best_program_name == "recolor-components-by-top-order"
 
 
+def test_relocate_shape_next_to_line_strategy_solves_smoke_task(
+    arc_fixture_dir: Path,
+    repo_root: Path,
+    tmp_path: Path,
+) -> None:
+    manifest, _ = run_arc_profile(
+        ArcRunOptions(
+            profile="arc-accuracy",
+            mode="tune",
+            dataset_dir=arc_fixture_dir,
+            split_file=repo_root / "experiments" / "splits" / "arc_relocate_shape_next_to_line_smoke.json",
+            output_root=tmp_path / "artifacts",
+            seed=179,
+        )
+    )
+
+    metrics = manifest.metrics_as_dict()
+    assert metrics["solved_train"] == metrics["task_count"] == 1
+    assert metrics["solved_test"] == metrics["test_eligible_count"] == 1
+    assert manifest.tasks[0].best_strategy == "arc-relocate-shape-next-to-line"
+    assert manifest.tasks[0].best_program_name == "relocate-shape-3-next-to-line-2-with-8"
+
+
 def test_zero_rectangle_family_fill_strategy_solves_smoke_task(
     arc_fixture_dir: Path,
     repo_root: Path,
@@ -475,6 +498,7 @@ def test_excluding_boolean_halves_strategy_breaks_that_recovery_task(
         "arc-alternating-diagonal-recolor",
         "arc-recolor-components-by-top-order",
         "arc-recolor-isolated-singletons",
+        "arc-relocate-shape-next-to-line",
         "arc-ray-extension",
         "arc-row-column-decomposition",
         "arc-separator-propagation",
