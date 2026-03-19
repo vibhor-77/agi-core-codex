@@ -74,10 +74,17 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     metrics = manifest.metrics_as_dict()
+    graduation_fragment = ""
+    if manifest.domain == "synthetic-grid" and "graduation_ready_for_arc" in metrics:
+        graduation_fragment = (
+            f" graduation_ready_for_arc={metrics['graduation_ready_for_arc']}"
+            f" graduation_solve_gain={metrics['graduation_solve_gain']}"
+        )
     print(
         f"profile={manifest.profile} domain={manifest.domain} mode={manifest.mode} split={manifest.split} "
         f"solved_train={metrics['solved_train']}/{metrics['task_count']} "
         f"train_exact_accuracy={metrics['train_exact_accuracy']:.3f} "
         f"manifest={manifest_path}"
+        f"{graduation_fragment}"
     )
     return 0

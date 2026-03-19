@@ -32,6 +32,23 @@ def test_minimal_synthetic_compounds_across_rounds(tmp_path: Path) -> None:
     assert second["solved_train"] > first["solved_train"]
     assert second["round_2_library_reuse_count"] > 0
     assert second["round_2_search_cost_per_exact"] < first["round_1_search_cost_per_exact"]
+    assert second["graduation_ready_for_arc"] is True
+    assert second["graduation_reused_program_count"] > 0
+
+
+def test_minimal_single_tier_is_not_arc_ready(tmp_path: Path) -> None:
+    manifest, _ = run_minimal(
+        MinimalRunOptions(
+            domain="synthetic-grid",
+            mode="tune",
+            output_root=tmp_path / "single",
+            rounds=2,
+            curriculum_tier="single",
+        )
+    )
+    metrics = manifest.metrics_as_dict()
+    assert metrics["graduation_solve_gain"] == 0
+    assert metrics["graduation_ready_for_arc"] is False
 
 
 def test_minimal_arc_smoke_runs_without_loading_legacy_strategies(

@@ -208,6 +208,30 @@ def _aggregate_metrics(task_records: tuple[TaskRecord, ...], round_summaries: tu
     return tuple(metrics)
 
 
+def _graduation_metrics(
+    *,
+    options: MinimalRunOptions,
+    round_summaries: tuple[RoundSummary, ...],
+    memory: LearnerMemory,
+) -> tuple[MetricRecord, ...]:
+    if options.domain != "synthetic-grid" or len(round_summaries) < 2:
+        return ()
+    first = round_summaries[0]
+    last = round_summaries[-1]
+    solve_gain = last.solved_train - first.solved_train
+    has_library_reuse = any(summary.library_reuse_count > 0 for summary in round_summaries[1:])
+    search_shrinkage = last.search_cost_per_exact < first.search_cost_per_exact
+    ready_for_arc = solve_gain > 0 and has_library_reuse and search_shrinkage
+    return (
+        MetricRecord("graduation_solve_gain", solve_gain),
+        MetricRecord("graduation_has_library_reuse", has_library_reuse),
+        MetricRecord("graduation_search_shrinkage", search_shrinkage),
+        MetricRecord("graduation_reused_program_count", memory.reused_program_count()),
+        MetricRecord("graduation_total_reuse_count", memory.total_reuse_count()),
+        MetricRecord("graduation_ready_for_arc", ready_for_arc),
+    )
+
+
 def run_minimal(options: MinimalRunOptions) -> tuple[RunManifest, Path]:
     tasks = _load_tasks(options)
     learner = WakeSleepLearner(
@@ -230,6 +254,11 @@ def run_minimal(options: MinimalRunOptions) -> tuple[RunManifest, Path]:
     round_summary_tuple = tuple(round_summaries)
     task_records = tuple(_task_record(task_run, round_summary_tuple) for task_run in final_task_runs)
     metrics = _aggregate_metrics(task_records, round_summary_tuple)
+    metrics = metrics + _graduation_metrics(
+        options=options,
+        round_summaries=round_summary_tuple,
+        memory=memory,
+    )
 
     created_at = datetime.now(timezone.utc).isoformat()
     run_id = stable_hash(
@@ -254,6 +283,11 @@ def run_minimal(options: MinimalRunOptions) -> tuple[RunManifest, Path]:
     ]
     if options.domain == "synthetic-grid":
         notes.append(f"curriculum_tier={options.curriculum_tier}")
+        if len(round_summary_tuple) >= 2:
+            notes.append(
+                "graduation_ready_for_arc="
+                + str(metrics[-1].value if metrics and metrics[-1].name == "graduation_ready_for_arc" else False)
+            )
     if options.split_file is not None:
         notes.append(f"split_file={options.split_file}")
 

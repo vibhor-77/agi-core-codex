@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Iterable, Sequence
 
 from agi_core_codex.core.hashing import stable_hash
-from agi_core_codex.minimal.ops import Grid, PrimitiveSpec, grid_accuracy
+from agi_core_codex.minimal.ops import Grid, PrimitiveSpec, compositor_specs, grid_accuracy
 
 
 @dataclass(frozen=True)
@@ -84,6 +84,12 @@ class LearnerMemory:
                     source_task_keys=entry.source_task_keys,
                     reuse_count=entry.reuse_count + 1,
                 )
+
+    def reused_program_count(self) -> int:
+        return sum(1 for entry in self.committed.values() if entry.reuse_count > 0)
+
+    def total_reuse_count(self) -> int:
+        return sum(entry.reuse_count for entry in self.committed.values())
 
 
 @dataclass(frozen=True)
@@ -231,6 +237,20 @@ def compose_program(spec: PrimitiveSpec, left: Program, right: Program) -> Progr
     )
 
 
+_COMPOSITOR_SPECS = {spec.name: spec for spec in compositor_specs()}
+
+
+def _canonicalize_program(program: Program) -> Program:
+    if program.kind == "library_ref":
+        return _canonicalize_program(program.children[0])
+    if program.kind != "composition":
+        return program
+    left = _canonicalize_program(program.children[0])
+    right = _canonicalize_program(program.children[1])
+    spec = _COMPOSITOR_SPECS[program.primitive_name or ""]
+    return compose_program(spec, left, right)
+
+
 def iter_subprograms(program: Program) -> Iterable[Program]:
     yield program
     for child in program.children:
@@ -250,13 +270,12 @@ class WakeSleepLearner:
     @staticmethod
     def _entry_priority(entry: LibraryEntry) -> tuple[object, ...]:
         exact_or_accuracy, task_count, compression_gain = entry.promotion_score
-        is_identity = int(entry.program.primitive_name == "identity")
         return (
-            is_identity,
             round(exact_or_accuracy, 12),
+            entry.reuse_count,
             compression_gain,
-            -task_count,
-            -entry.program.complexity,
+            task_count,
+            entry.program.complexity,
             entry.program.id,
         )
 
@@ -306,13 +325,8 @@ class WakeSleepLearner:
         promoted = self.sleep(task_runs=tuple(task_runs), memory=memory, round_index=round_index)
         committed = memory.commit()
         solved_train = sum(1 for run in task_runs if run.best is not None and run.best.score.train_exact)
-        exact_evaluation_cost = sum(
-            run.best.evaluation_index
-            for run in task_runs
-            if run.best is not None and run.best.score.train_exact
-        )
         search_cost_per_exact = (
-            exact_evaluation_cost / solved_train
+            total_evaluated / solved_train
             if solved_train
             else float(total_evaluated)
         )
@@ -335,8 +349,9 @@ class WakeSleepLearner:
         ordered_candidates: list[Program] = []
         seen_program_ids: set[str] = set()
         if round_index > 0 and library_programs:
-            high_priority_library_programs = library_programs[:3]
-            low_priority_library_programs = library_programs[3:]
+            priority_width = 2 if round_index == 1 else 3
+            high_priority_library_programs = library_programs[:priority_width]
+            low_priority_library_programs = library_programs[priority_width:]
         else:
             high_priority_library_programs = library_programs
             low_priority_library_programs = ()
@@ -351,15 +366,24 @@ class WakeSleepLearner:
             append_candidate(program)
 
         if round_index > 0 and library_programs:
-            early_chain = next(spec for spec in self._binary_compositors if spec.name == "chain")
             left_pool = tuple(program for program in high_priority_library_programs if program.primitive_name != "identity")
             if not left_pool:
                 left_pool = high_priority_library_programs
-            for left in left_pool:
-                for right in seed_programs:
-                    append_candidate(compose_program(early_chain, left, right))
+            right_pool = tuple(program for program in seed_programs if program.primitive_name != "identity") + left_pool
+            early_compositors = (
+                tuple(spec for spec in self._binary_compositors if spec.name == "chain")
+                if round_index == 1
+                else self._binary_compositors
+            )
+            for compositor in early_compositors:
+                for left in left_pool:
+                    for right in right_pool:
+                        append_candidate(compose_program(compositor, left, right))
 
-        for program in low_priority_library_programs + seed_programs:
+        for program in seed_programs:
+            append_candidate(program)
+
+        for program in low_priority_library_programs:
             append_candidate(program)
 
         if round_index > 0 and library_programs:
@@ -390,7 +414,7 @@ class WakeSleepLearner:
                 uses_committed_library=program.contains_library_reference(),
             )
             candidate_results.append(candidate)
-            if score.train_exact and candidate.uses_committed_library:
+            if score.train_exact:
                 break
 
         best = sorted(candidate_results, key=_program_rank_key, reverse=True)[0] if candidate_results else None
@@ -417,9 +441,10 @@ class WakeSleepLearner:
                 for subtree in iter_subprograms(candidate.program):
                     if subtree.kind == "library_ref":
                         continue
-                    subtree_occurrences[subtree.id].append(
+                    canonical_subtree = _canonicalize_program(subtree)
+                    subtree_occurrences[canonical_subtree.id].append(
                         (
-                            subtree,
+                            canonical_subtree,
                             run.task_key,
                             candidate.score.train_accuracy,
                             candidate.score.train_exact,

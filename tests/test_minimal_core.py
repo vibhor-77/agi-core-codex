@@ -11,6 +11,7 @@ from agi_core_codex.minimal.core import (
     compose_program,
     make_leaf_program,
 )
+from agi_core_codex.minimal.domains import build_synthetic_curriculum
 from agi_core_codex.minimal.ops import compositor_specs, unary_seed_specs
 
 
@@ -62,3 +63,17 @@ def test_sleep_promotes_reused_subprograms() -> None:
     assert task_runs[0].best is not None
     promoted = learner.sleep(task_runs=task_runs, memory=memory, round_index=0)
     assert promoted >= 0
+
+
+def test_promoted_compound_programs_are_canonicalized() -> None:
+    learner = WakeSleepLearner(unary_primitives=unary_seed_specs(), binary_compositors=compositor_specs())
+    memory = LearnerMemory()
+    tasks = build_synthetic_curriculum("pair").tasks
+    learner.run_round(tasks=tasks, memory=memory, round_index=0)
+    learner.run_round(tasks=tasks, memory=memory, round_index=1)
+
+    committed_names = {entry.program.name for entry in memory.committed.values()}
+    assert "crop_support-chain-flip_h" in committed_names
+    assert all(not name.startswith("lib:") for name in committed_names)
+    assert memory.reused_program_count() > 0
+    assert memory.total_reuse_count() > 0
