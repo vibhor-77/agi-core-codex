@@ -77,3 +77,15 @@ def test_promoted_compound_programs_are_canonicalized() -> None:
     assert all(not name.startswith("lib:") for name in committed_names)
     assert memory.reused_program_count() > 0
     assert memory.total_reuse_count() > 0
+
+
+def test_later_round_search_filters_redundant_primitive_library_entries() -> None:
+    learner = WakeSleepLearner(unary_primitives=unary_seed_specs(), binary_compositors=compositor_specs())
+    memory = LearnerMemory()
+    tasks = build_synthetic_curriculum("pair").tasks
+    learner.run_round(tasks=tasks, memory=memory, round_index=0)
+
+    active_entries = learner._search_library_entries(memory, round_index=1)
+    active_names = {entry.program.name for entry in active_entries}
+
+    assert active_names == {"crop_support"}

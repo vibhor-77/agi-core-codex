@@ -282,8 +282,10 @@ class WakeSleepLearner:
     def _ordered_library_refs(
         self,
         memory: LearnerMemory,
+        *,
+        round_index: int,
     ) -> tuple[Program, ...]:
-        entries = tuple(memory.committed.values())
+        entries = self._search_library_entries(memory, round_index=round_index)
         if not entries:
             return ()
         ordered_entries = sorted(self._ordered_library_entries(entries), key=self._entry_priority, reverse=True)
@@ -305,7 +307,7 @@ class WakeSleepLearner:
         *,
         round_index: int,
     ) -> tuple[Program, ...]:
-        entries = self._ordered_library_entries(tuple(memory.committed.values()))
+        entries = self._ordered_library_entries(self._search_library_entries(memory, round_index=round_index))
         if not entries:
             return ()
         exact_entries = [entry for entry in entries if entry.promotion_score[0] >= 1.0]
@@ -324,6 +326,24 @@ class WakeSleepLearner:
             seen_ids.add(entry.program.id)
             selected.append(entry)
         return tuple(wrap_library_program(entry.program) for entry in selected)
+
+    def _search_library_entries(
+        self,
+        memory: LearnerMemory,
+        *,
+        round_index: int,
+    ) -> tuple[LibraryEntry, ...]:
+        entries = tuple(memory.committed.values())
+        if round_index <= 0:
+            return entries
+        filtered: list[LibraryEntry] = []
+        for entry in entries:
+            if entry.program.kind != "primitive":
+                filtered.append(entry)
+                continue
+            if entry.reuse_count > 0 or entry.promotion_score[2] > 0:
+                filtered.append(entry)
+        return tuple(filtered)
 
     def run_round(
         self,
@@ -371,7 +391,7 @@ class WakeSleepLearner:
 
     def _run_task(self, *, task: GridTask, memory: LearnerMemory, round_index: int) -> TaskRun:
         seed_programs = tuple(make_leaf_program(spec) for spec in self._unary_primitives)
-        library_programs = self._ordered_library_refs(memory)
+        library_programs = self._ordered_library_refs(memory, round_index=round_index)
         frontier_library_programs = self._frontier_library_programs(memory, round_index=round_index)
         max_program_complexity = self._max_program_complexity(round_index)
 
