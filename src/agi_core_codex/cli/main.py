@@ -12,9 +12,15 @@ from agi_core_codex.domains.arc.analyze import (
 from agi_core_codex.domains.arc.discovery import discover_arc_dataset
 from agi_core_codex.domains.arc.runner import ArcRunOptions, run_arc_profile
 from agi_core_codex.domains.arc.splits import write_train_splits
+from agi_core_codex.domains.arc.transfer_analysis import (
+    cluster_transfer_failures,
+    diff_transfer_manifests,
+    format_transfer_diff,
+    format_transfer_failure_clusters,
+)
 
 
-PROFILES = ("baseline-core", "arc-accuracy", "arc-theory")
+PROFILES = ("baseline-core", "arc-accuracy", "arc-theory", "arc-transfer")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -63,6 +69,16 @@ def _build_parser() -> argparse.ArgumentParser:
     classify_parser.add_argument("--manifest-path", type=Path, required=True)
     classify_parser.add_argument("--dataset-dir", type=Path)
     classify_parser.add_argument("--format", choices=("text", "json"), default="text")
+
+    diff_parser = arc_analyze_subparsers.add_parser("diff-transfer")
+    diff_parser.add_argument("--baseline-manifest-path", type=Path, required=True)
+    diff_parser.add_argument("--candidate-manifest-path", type=Path, required=True)
+    diff_parser.add_argument("--format", choices=("text", "json"), default="text")
+
+    cluster_parser = arc_analyze_subparsers.add_parser("cluster-failures")
+    cluster_parser.add_argument("--manifest-path", type=Path, required=True)
+    cluster_parser.add_argument("--dataset-dir", type=Path)
+    cluster_parser.add_argument("--format", choices=("text", "json"), default="text")
 
     for profile in PROFILES:
         profile_parser = subparsers.add_parser(profile)
@@ -166,6 +182,22 @@ def main(argv: list[str] | None = None) -> int:
                 dataset_dir=args.dataset_dir,
             )
             print(format_failure_report(report, output_format=args.format))
+            return 0
+
+        if args.arc_analyze_command == "diff-transfer":
+            report = diff_transfer_manifests(
+                baseline_manifest_path=args.baseline_manifest_path,
+                candidate_manifest_path=args.candidate_manifest_path,
+            )
+            print(format_transfer_diff(report, output_format=args.format))
+            return 0
+
+        if args.arc_analyze_command == "cluster-failures":
+            report = cluster_transfer_failures(
+                manifest_path=args.manifest_path,
+                dataset_dir=args.dataset_dir,
+            )
+            print(format_transfer_failure_clusters(report, output_format=args.format))
             return 0
 
     manifest, manifest_path = run_arc_profile(

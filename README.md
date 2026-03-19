@@ -10,6 +10,8 @@ This repository starts with ARC as the first implemented domain and keeps room f
 ## What exists today
 
 - A small generic kernel built around `Environment`, `Grammar`, `Scorer`, `Memory`, and `Strategy`.
+- A transfer-oriented hypothesis pipeline built around `TaskRepresentation`, `Hypothesis`,
+  `HypothesisFamily`, `Verifier`, and compiled executable programs with stable IDs.
 - Deterministic budgeted search with explicit failure handling.
 - Immutable run manifests and an artifact index for reproducible experiments.
 - ARC support implemented as a plugin layer with named strategies:
@@ -32,10 +34,11 @@ This repository starts with ARC as the first implemented domain and keeps room f
   - constant-output synthesis
   - consistent color-map synthesis
   - task-scoped absolute patch synthesis
-- Three CLI profiles:
+- Four CLI profiles:
   - `baseline-core`
   - `arc-accuracy`
   - `arc-theory`
+  - `arc-transfer`
 
 ## Quick start
 
@@ -52,18 +55,25 @@ python -m agi_core_codex arc-data make-splits \
   --seed 7
 python -m agi_core_codex arc-accuracy tune \
   --split-file experiments/splits/arc_agi_1_train_dev.json
+python -m agi_core_codex arc-transfer tune \
+  --split-file experiments/splits/arc_agi_1_train_val.json
 ```
 
 ## Current ARC-AGI-1 snapshot
 
 Latest accepted checkpoint on `main`: March 18, 2026.
 
-- `train-dev`: `42/320` exact on train examples, `47/320` exact on test examples
-- `train-val`: `36/80` exact on train examples, `36/80` exact on test examples
-- `public-eval`: `17/400` exact on test examples, which is `4.25%`
+- Frozen `arc-accuracy` baseline:
+  - `train-dev`: `42/320` exact on train examples, `47/320` exact on test examples
+  - `train-val`: `36/80` exact on train examples, `36/80` exact on test examples
+  - `public-eval`: `17/400` exact on test examples, which is `4.25%`
+- First `arc-transfer` checkpoint:
+  - `train-dev`: `15/320` exact on train examples
+  - `train-val`: `4/80` exact on train examples
 
-These numbers are exact-match rates from the current `arc-accuracy` profile. Public eval
-is used as checkpoint-only reporting, not for tuning.
+The baseline and transfer numbers are intentionally reported side by side. The transfer
+track is a family-based redesign, not a stronger benchmark result yet. Public eval
+remains checkpoint-only reporting, not a tuning signal.
 
 ## Design choices
 
@@ -71,6 +81,9 @@ is used as checkpoint-only reporting, not for tuning.
 - Dynamic operators get stable semantic IDs.
 - Failure is treated as failure, never silently mapped to identity.
 - ARC recovery heuristics live as explicit strategies that can be ablated from the CLI.
+- The transfer track uses five broad ARC hypothesis families instead of the one-task
+  strategy zoo: global transforms, object transforms, relation propagation, template
+  completion, and region routing.
 - Public evaluation should be checkpoint-only; tuning happens on train-derived splits.
 
 ## Layout
@@ -88,5 +101,6 @@ Use `arc-data make-splits` against the ARC training directory to create determin
 the command auto-discovers it. In this workspace it can discover the sibling
 read-only dataset under `~/github/agi-core/data/ARC-AGI/data/training`.
 
-Once a split file has `benchmark` and `source_dataset_dir` metadata, `arc-accuracy`
-and `arc-theory` can auto-resolve the dataset path, so `--dataset-dir` becomes optional.
+Once a split file has `benchmark` and `source_dataset_dir` metadata, `arc-accuracy`,
+`arc-theory`, and `arc-transfer` can auto-resolve the dataset path, so `--dataset-dir`
+becomes optional.

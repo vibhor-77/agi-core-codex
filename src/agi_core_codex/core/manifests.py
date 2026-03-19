@@ -38,6 +38,11 @@ class TaskRecord:
     budget_used: dict[str, int]
     test_verification_status: str
     phase_records: tuple[PhaseRecord, ...]
+    family_name: str | None = None
+    representation_summary: str | None = None
+    verification_fail_reason: str | None = None
+    genericity_score: float | None = None
+    transfer_proxy_score: float | None = None
 
 
 @dataclass(frozen=True)
@@ -117,4 +122,3 @@ def update_index(output_root: Path, entry: ArtifactIndexEntry) -> Path:
     filtered.sort(key=lambda item: (item["created_at"], item["run_id"]))
     index_path.write_text(json.dumps({"entries": filtered}, indent=2, sort_keys=True) + "\n")
     return index_path
-

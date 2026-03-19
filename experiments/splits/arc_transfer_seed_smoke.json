@@ -1,0 +1,9 @@
+{
+  "task_ids": [
+    "mirror_tile_horizontal",
+    "extract_largest_cc",
+    "separator_propagation",
+    "motif_completion",
+    "fill_enclosed"
+  ]
+}

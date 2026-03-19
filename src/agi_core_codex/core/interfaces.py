@@ -50,6 +50,24 @@ class ProgramHandle:
 
 
 @dataclass(frozen=True)
+class TaskRepresentation:
+    domain: str
+    task_key: str
+    summary: str
+    features: Mapping[str, Any] = field(default_factory=dict, compare=False)
+
+
+@dataclass(frozen=True)
+class Hypothesis:
+    id: str
+    family_name: str
+    description: str
+    parameters: Mapping[str, Any] = field(default_factory=dict, compare=False)
+    cost: CostModel = field(default_factory=CostModel.zero)
+    metadata: Mapping[str, Any] = field(default_factory=dict, compare=False)
+
+
+@dataclass(frozen=True)
 class ScoreBreakdown:
     train_exact: bool
     train_accuracy: float
@@ -58,6 +76,26 @@ class ScoreBreakdown:
     test_exact: bool | None = None
     test_accuracy: float | None = None
     test_predictions: tuple[Any, ...] = ()
+    notes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class CompiledProgram:
+    hypothesis: Hypothesis
+    handle: ProgramHandle
+    family_name: str
+    representation_summary: str
+    genericity_score: float = 0.0
+    transfer_proxy_score: float = 0.0
+    metadata: Mapping[str, Any] = field(default_factory=dict, compare=False)
+
+
+@dataclass(frozen=True)
+class VerificationResult:
+    hypothesis: Hypothesis
+    score: ScoreBreakdown | None
+    compiled_program: CompiledProgram | None = None
+    failure_reason: str | None = None
     notes: tuple[str, ...] = ()
 
 
@@ -146,3 +184,28 @@ class Strategy(Protocol):
     def run(self, context: Any) -> StrategyResult:
         ...
 
+
+@runtime_checkable
+class HypothesisFamily(Protocol):
+    name: str
+    domain: str
+    cost_model: CostModel
+
+    def build_representation(self, task: Any, environment: Environment) -> TaskRepresentation:
+        ...
+
+    def propose(self, task: Any, representation: TaskRepresentation) -> Sequence[Hypothesis]:
+        ...
+
+
+@runtime_checkable
+class Verifier(Protocol):
+    domain: str
+
+    def verify(
+        self,
+        task: Any,
+        hypothesis: Hypothesis,
+        representation: TaskRepresentation,
+    ) -> VerificationResult:
+        ...

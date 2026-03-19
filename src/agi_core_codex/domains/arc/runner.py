@@ -26,6 +26,7 @@ from agi_core_codex.domains.arc.grammar import ArcGrammar
 from agi_core_codex.domains.arc.loader import load_arc_tasks, load_split_ids, load_split_payload
 from agi_core_codex.domains.arc.profiles import build_arc_profile
 from agi_core_codex.domains.arc.scorer import ArcScorer
+from agi_core_codex.domains.arc.transfer import build_arc_transfer_profile
 
 
 @dataclass(frozen=True)
@@ -73,11 +74,13 @@ def _build_budget(profile: str, primitive_count: int, task_cells: int) -> Search
         "baseline-core": 0,
         "arc-accuracy": 12,
         "arc-theory": 16,
+        "arc-transfer": 8,
     }[profile]
     multiplier = {
         "baseline-core": 1,
         "arc-accuracy": 1,
         "arc-theory": 2,
+        "arc-transfer": 1,
     }[profile]
     max_evaluations = max(primitive_count * multiplier + bonus, 8)
     return SearchBudget(
@@ -126,6 +129,7 @@ def _task_record(search_report) -> TaskRecord:
             test_verification_status = "unavailable"
         else:
             test_verification_status = "available_and_checked"
+    metadata = dict(best.metadata) if best is not None else {}
 
     return TaskRecord(
         task_key=search_report.task_key,
@@ -140,6 +144,11 @@ def _task_record(search_report) -> TaskRecord:
         budget_used=search_report.budget_used.to_dict(),
         test_verification_status=test_verification_status,
         phase_records=_phase_records(search_report),
+        family_name=metadata.get("family_name"),
+        representation_summary=metadata.get("representation_summary"),
+        verification_fail_reason=metadata.get("verification_fail_reason"),
+        genericity_score=metadata.get("genericity_score"),
+        transfer_proxy_score=metadata.get("transfer_proxy_score"),
     )
 
 
@@ -158,7 +167,18 @@ def _aggregate_metrics(task_records: tuple[TaskRecord, ...]) -> tuple[MetricReco
         else 0.0
     )
 
-    return (
+    transfer_scores = [
+        record.transfer_proxy_score
+        for record in task_records
+        if record.transfer_proxy_score is not None
+    ]
+    genericity_scores = [
+        record.genericity_score
+        for record in task_records
+        if record.genericity_score is not None
+    ]
+
+    metrics = [
         MetricRecord("task_count", task_count, higher_is_better=False),
         MetricRecord("solved_train", solved_train),
         MetricRecord("train_exact_accuracy", solved_train / task_count if task_count else 0.0),
@@ -170,7 +190,22 @@ def _aggregate_metrics(task_records: tuple[TaskRecord, ...]) -> tuple[MetricReco
             solved_test / len(test_eligible) if test_eligible else 0.0,
         ),
         MetricRecord("mean_test_accuracy", test_accuracy_mean),
-    )
+    ]
+    if genericity_scores:
+        metrics.append(
+            MetricRecord(
+                "mean_genericity_score",
+                sum(genericity_scores) / len(genericity_scores),
+            )
+        )
+    if transfer_scores:
+        metrics.append(
+            MetricRecord(
+                "mean_transfer_proxy_score",
+                sum(transfer_scores) / len(transfer_scores),
+            )
+        )
+    return tuple(metrics)
 
 
 def _resolve_dataset_dir(options: ArcRunOptions) -> Path:
@@ -207,11 +242,17 @@ def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
     grammar = ArcGrammar()
     scorer = ArcScorer()
     memory = InMemoryLibrary()
-    strategies = build_arc_profile(
-        options.profile,
-        include=options.include_strategies,
-        exclude=options.exclude_strategies,
-    )
+    if options.profile == "arc-transfer":
+        strategies = build_arc_transfer_profile(
+            include=options.include_strategies,
+            exclude=options.exclude_strategies,
+        )
+    else:
+        strategies = build_arc_profile(
+            options.profile,
+            include=options.include_strategies,
+            exclude=options.exclude_strategies,
+        )
     kernel = SearchKernel(strategies)
 
     task_records = []
@@ -263,6 +304,11 @@ def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
             note
             for note in (
                 "public eval should remain checkpoint-only",
+                (
+                    "transfer track is family-based and does not inherit the baseline strategy zoo"
+                    if options.profile == "arc-transfer"
+                    else None
+                ),
                 f"mode={options.mode}",
                 f"dataset_dir={dataset_dir}",
                 (
