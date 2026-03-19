@@ -1,0 +1,7 @@
+{
+  "task_ids": [
+    "crop_nonzero",
+    "fill_enclosed",
+    "crop_flip_horizontal"
+  ]
+}

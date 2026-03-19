@@ -20,7 +20,7 @@ from agi_core_codex.domains.arc.transfer_analysis import (
 )
 
 
-PROFILES = ("baseline-core", "arc-accuracy", "arc-theory", "arc-transfer")
+PROFILES = ("baseline-core", "arc-accuracy", "arc-theory", "arc-transfer", "arc-bootstrap")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -89,6 +89,7 @@ def _build_parser() -> argparse.ArgumentParser:
             mode_parser.add_argument("--split-file", type=Path, required=True)
             mode_parser.add_argument("--output-root", type=Path, default=Path("artifacts"))
             mode_parser.add_argument("--seed", type=int, default=0)
+            mode_parser.add_argument("--rounds", type=int, default=1)
             mode_parser.add_argument("--limit", type=int)
             mode_parser.add_argument(
                 "--benchmark",
@@ -208,6 +209,7 @@ def main(argv: list[str] | None = None) -> int:
             split_file=args.split_file,
             output_root=args.output_root,
             seed=args.seed,
+            rounds=args.rounds,
             limit=args.limit,
             include_strategies=tuple(args.include_strategy),
             exclude_strategies=tuple(args.exclude_strategy),

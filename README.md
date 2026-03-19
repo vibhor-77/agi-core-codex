@@ -39,6 +39,7 @@ This repository starts with ARC as the first implemented domain and keeps room f
   - `arc-accuracy`
   - `arc-theory`
   - `arc-transfer`
+  - `arc-bootstrap`
 
 ## Quick start
 
@@ -57,6 +58,9 @@ python -m agi_core_codex arc-accuracy tune \
   --split-file experiments/splits/arc_agi_1_train_dev.json
 python -m agi_core_codex arc-transfer tune \
   --split-file experiments/splits/arc_agi_1_train_val.json
+python -m agi_core_codex arc-bootstrap tune \
+  --split-file experiments/splits/arc_agi_1_train_val.json \
+  --rounds 2
 ```
 
 ## Current ARC-AGI-1 snapshot
@@ -70,10 +74,16 @@ Latest accepted checkpoint on `main`: March 18, 2026.
 - First `arc-transfer` checkpoint:
   - `train-dev`: `15/320` exact on train examples
   - `train-val`: `4/80` exact on train examples
+- First `arc-bootstrap` checkpoint:
+  - `train-dev`: `7/320` exact on train examples after 2 rounds
+  - `train-val`: `2/80` exact on train examples after 2 rounds
+  - round-to-round gain is small but real: `6 -> 7` on `train-dev`, `1 -> 2` on `train-val`
 
 The baseline and transfer numbers are intentionally reported side by side. The transfer
-track is a family-based redesign, not a stronger benchmark result yet. Public eval
-remains checkpoint-only reporting, not a tuning signal.
+track is a family-based redesign, not a stronger benchmark result yet. The bootstrap
+track is closer to the original 4-pillars thesis: tiny seed grammar, generic sequential
+composition, staged wake/sleep memory, and explicit multi-round library growth. Public
+eval remains checkpoint-only reporting, not a tuning signal.
 
 ## Design choices
 
@@ -84,6 +94,8 @@ remains checkpoint-only reporting, not a tuning signal.
 - The transfer track uses five broad ARC hypothesis families instead of the one-task
   strategy zoo: global transforms, object transforms, relation propagation, template
   completion, and region routing.
+- The bootstrap track intentionally starts much lower-level: a tiny seeded ARC grammar,
+  generic sequential composition, and staged round-based library promotion.
 - Public evaluation should be checkpoint-only; tuning happens on train-derived splits.
 
 ## Layout
@@ -102,5 +114,5 @@ the command auto-discovers it. In this workspace it can discover the sibling
 read-only dataset under `~/github/agi-core/data/ARC-AGI/data/training`.
 
 Once a split file has `benchmark` and `source_dataset_dir` metadata, `arc-accuracy`,
-`arc-theory`, and `arc-transfer` can auto-resolve the dataset path, so `--dataset-dir`
-becomes optional.
+`arc-theory`, `arc-transfer`, and `arc-bootstrap` can auto-resolve the dataset path,
+so `--dataset-dir` becomes optional.

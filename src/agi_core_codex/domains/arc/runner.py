@@ -19,7 +19,14 @@ from agi_core_codex.core.manifests import (
     update_index,
     write_manifest,
 )
-from agi_core_codex.core.memory import InMemoryLibrary
+from agi_core_codex.core.memory import InMemoryLibrary, StagedMemory
+from agi_core_codex.domains.arc.bootstrap import (
+    ArcBootstrapGrammar,
+    BootstrapRoundSummary,
+    bootstrap_round_metrics,
+    build_arc_bootstrap_strategies,
+    sleep_promote_bootstrap_candidates,
+)
 from agi_core_codex.domains.arc.discovery import discover_arc_dataset, validate_dataset_dir
 from agi_core_codex.domains.arc.environment import ArcEnvironment
 from agi_core_codex.domains.arc.grammar import ArcGrammar
@@ -42,6 +49,7 @@ class ArcRunOptions:
     exclude_strategies: tuple[str, ...] = ()
     benchmark: str | None = None
     dataset_split: str = "training"
+    rounds: int = 1
 
 
 def _repository_root() -> Path:
@@ -75,12 +83,14 @@ def _build_budget(profile: str, primitive_count: int, task_cells: int) -> Search
         "arc-accuracy": 12,
         "arc-theory": 16,
         "arc-transfer": 8,
+        "arc-bootstrap": 24,
     }[profile]
     multiplier = {
         "baseline-core": 1,
         "arc-accuracy": 1,
         "arc-theory": 2,
         "arc-transfer": 1,
+        "arc-bootstrap": 4,
     }[profile]
     max_evaluations = max(primitive_count * multiplier + bonus, 8)
     return SearchBudget(
@@ -238,6 +248,9 @@ def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
     dataset_dir = _resolve_dataset_dir(options)
     tasks = load_arc_tasks(dataset_dir, split_ids=split_ids, limit=options.limit)
 
+    if options.profile == "arc-bootstrap":
+        return _run_arc_bootstrap_profile(options, tasks, dataset_dir)
+
     environment = ArcEnvironment()
     grammar = ArcGrammar()
     scorer = ArcScorer()
@@ -326,6 +339,113 @@ def run_arc_profile(options: ArcRunOptions) -> tuple[RunManifest, Path]:
         ),
     )
 
+    manifest_path = write_manifest(manifest, options.output_root)
+    update_index(
+        options.output_root,
+        ArtifactIndexEntry(
+            run_id=manifest.run_id,
+            created_at=manifest.created_at,
+            profile=manifest.profile,
+            mode=manifest.mode,
+            domain=manifest.domain,
+            split=manifest.split,
+            manifest_path=str(manifest_path),
+            metrics=manifest.metrics,
+        ),
+    )
+    return manifest, manifest_path
+
+
+def _run_arc_bootstrap_profile(
+    options: ArcRunOptions,
+    tasks,
+    dataset_dir: Path,
+) -> tuple[RunManifest, Path]:
+    environment = ArcEnvironment()
+    grammar = ArcBootstrapGrammar()
+    scorer = ArcScorer()
+    memory = StagedMemory()
+
+    final_task_records = ()
+    round_summaries: list[BootstrapRoundSummary] = []
+    for round_index in range(options.rounds):
+        strategies = build_arc_bootstrap_strategies(round_index=round_index)
+        kernel = SearchKernel(strategies)
+        reports = []
+        task_records = []
+        for task in tasks:
+            primitive_count = grammar.primitive_count(task)
+            budget = _build_budget(options.profile, primitive_count, environment.task_size(task))
+            report = kernel.run(
+                task=task,
+                environment=environment,
+                grammar=grammar,
+                scorer=scorer,
+                memory=memory,
+                budget=budget,
+                seed=options.seed,
+            )
+            reports.append(report)
+            task_records.append(_task_record(report))
+
+        sleep_promote_bootstrap_candidates(reports=reports, memory=memory)
+        committed_entries = memory.commit("arc")
+        solved_train = sum(1 for record in task_records if record.solved_train)
+        round_summaries.append(
+            BootstrapRoundSummary(
+                round_index=round_index,
+                solved_train=solved_train,
+                task_count=len(task_records),
+                library_size=memory.size("arc"),
+                committed_entries=committed_entries,
+            )
+        )
+        final_task_records = tuple(task_records)
+
+    metrics = _aggregate_metrics(final_task_records) + bootstrap_round_metrics(round_summaries)
+    created_at = datetime.now(timezone.utc).isoformat()
+    run_id = stable_hash(
+        {
+            "created_at": created_at,
+            "profile": options.profile,
+            "mode": options.mode,
+            "split_file": str(options.split_file),
+            "seed": options.seed,
+            "rounds": options.rounds,
+        },
+        namespace="run",
+    )[:16]
+
+    manifest = RunManifest(
+        run_id=run_id,
+        created_at=created_at,
+        profile=options.profile,
+        mode=options.mode,
+        domain="arc",
+        split=options.split_file.stem,
+        split_path=str(options.split_file),
+        code_hash=_code_hash(_repository_root()),
+        env_hash=_env_hash(),
+        python_version=sys.version.split()[0],
+        primitive_count=grammar.primitive_count(None),
+        strategy_set=tuple(strategy.name for strategy in build_arc_bootstrap_strategies(round_index=0)),
+        seed=options.seed,
+        task_count=len(final_task_records),
+        metrics=metrics,
+        tasks=final_task_records,
+        notes=tuple(
+            note
+            for note in (
+                "bootstrap track uses staged wake/sleep memory",
+                "public eval should remain checkpoint-only",
+                f"mode={options.mode}",
+                f"dataset_dir={dataset_dir}",
+                f"rounds={options.rounds}",
+                "tiny seed grammar + generic sequential composition only",
+            )
+            if note is not None
+        ),
+    )
     manifest_path = write_manifest(manifest, options.output_root)
     update_index(
         options.output_root,
