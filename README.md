@@ -84,8 +84,9 @@ This rewrite is about compounding evidence first, not top-line ARC score first.
 Current verified signals:
 - synthetic compounding smoke: round 2 beats round 1 and reuses committed library
 - synthetic pair curriculum now clears the explicit graduation gate with `graduation_ready_for_arc=True`
+- synthetic triple curriculum now solves all tasks by round 3, and round-3 search cost per exact drops sharply versus round 2
 - minimal ARC smoke: the active ARC path runs end to end without importing legacy ARC strategy modules
-- focused verification after the rewrite: `75 passed`
+- focused verification after the rewrite: `76 passed`
 
 The synthetic curriculum is the first gate. The graduation criteria before serious ARC emphasis are:
 - round-to-round solve gain

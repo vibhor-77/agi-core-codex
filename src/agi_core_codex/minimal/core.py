@@ -293,10 +293,37 @@ class WakeSleepLearner:
         self,
         entries: Sequence[LibraryEntry],
     ) -> tuple[LibraryEntry, ...]:
-        identity_entries = [entry for entry in entries if entry.program.primitive_name == "identity"]
-        remaining = [entry for entry in entries if entry.program.primitive_name != "identity"]
-        remaining.sort(key=self._entry_priority, reverse=True)
-        return tuple(identity_entries + remaining)
+        return tuple(sorted(entries, key=self._entry_priority, reverse=True))
+
+    @staticmethod
+    def _max_program_complexity(round_index: int) -> int:
+        return 3 + (2 * round_index)
+
+    def _frontier_library_programs(
+        self,
+        memory: LearnerMemory,
+        *,
+        round_index: int,
+    ) -> tuple[Program, ...]:
+        entries = self._ordered_library_entries(tuple(memory.committed.values()))
+        if not entries:
+            return ()
+        exact_entries = [entry for entry in entries if entry.promotion_score[0] >= 1.0]
+        partial_entries = [
+            entry
+            for entry in entries
+            if entry.promotion_score[0] < 1.0 and entry.promotion_score[2] > 0
+        ]
+        exact_limit = 2 if round_index <= 1 else 4
+        partial_limit = 0 if round_index <= 1 else 2
+        selected: list[LibraryEntry] = []
+        seen_ids: set[str] = set()
+        for entry in exact_entries[:exact_limit] + partial_entries[:partial_limit]:
+            if entry.program.id in seen_ids:
+                continue
+            seen_ids.add(entry.program.id)
+            selected.append(entry)
+        return tuple(wrap_library_program(entry.program) for entry in selected)
 
     def run_round(
         self,
@@ -345,30 +372,31 @@ class WakeSleepLearner:
     def _run_task(self, *, task: GridTask, memory: LearnerMemory, round_index: int) -> TaskRun:
         seed_programs = tuple(make_leaf_program(spec) for spec in self._unary_primitives)
         library_programs = self._ordered_library_refs(memory)
+        frontier_library_programs = self._frontier_library_programs(memory, round_index=round_index)
+        max_program_complexity = self._max_program_complexity(round_index)
 
         ordered_candidates: list[Program] = []
         seen_program_ids: set[str] = set()
-        if round_index > 0 and library_programs:
-            priority_width = 2 if round_index == 1 else 3
-            high_priority_library_programs = library_programs[:priority_width]
-            low_priority_library_programs = library_programs[priority_width:]
-        else:
-            high_priority_library_programs = library_programs
-            low_priority_library_programs = ()
 
         def append_candidate(program: Program) -> None:
+            if program.complexity > max_program_complexity:
+                return
+            if program.kind == "composition" and program.primitive_name == "chain":
+                left, right = program.children
+                if left.primitive_name == "identity" or right.primitive_name == "identity":
+                    return
             if program.id in seen_program_ids:
                 return
             seen_program_ids.add(program.id)
             ordered_candidates.append(program)
 
-        for program in high_priority_library_programs:
+        for program in frontier_library_programs:
             append_candidate(program)
 
         if round_index > 0 and library_programs:
-            left_pool = tuple(program for program in high_priority_library_programs if program.primitive_name != "identity")
+            left_pool = tuple(program for program in frontier_library_programs if program.primitive_name != "identity")
             if not left_pool:
-                left_pool = high_priority_library_programs
+                left_pool = frontier_library_programs
             right_pool = tuple(program for program in seed_programs if program.primitive_name != "identity") + left_pool
             early_compositors = (
                 tuple(spec for spec in self._binary_compositors if spec.name == "chain")
@@ -383,7 +411,7 @@ class WakeSleepLearner:
         for program in seed_programs:
             append_candidate(program)
 
-        for program in low_priority_library_programs:
+        for program in library_programs:
             append_candidate(program)
 
         if round_index > 0 and library_programs:
@@ -458,6 +486,8 @@ class WakeSleepLearner:
             mean_accuracy = sum(score for _, _, score, _ in occurrences) / len(occurrences)
             exact_hits = sum(1 for _, _, _, is_exact in occurrences if is_exact)
             compression_gain = len(occurrences) * max(program.complexity - 1, 0)
+            if exact_hits == 0 and mean_accuracy <= 0.0:
+                continue
             promotion_score = (1.0 if exact_hits else mean_accuracy, len(task_keys), compression_gain)
             scored.append((promotion_score, program, task_keys))
 

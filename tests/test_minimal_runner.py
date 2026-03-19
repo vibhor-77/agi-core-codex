@@ -51,6 +51,22 @@ def test_minimal_single_tier_is_not_arc_ready(tmp_path: Path) -> None:
     assert metrics["graduation_ready_for_arc"] is False
 
 
+def test_minimal_triple_tier_compounds_across_later_rounds(tmp_path: Path) -> None:
+    manifest, _ = run_minimal(
+        MinimalRunOptions(
+            domain="synthetic-grid",
+            mode="tune",
+            output_root=tmp_path / "triple",
+            rounds=3,
+            curriculum_tier="triple",
+        )
+    )
+    metrics = manifest.metrics_as_dict()
+    assert metrics["round_3_solved_train"] > metrics["round_2_solved_train"]
+    assert metrics["round_3_search_cost_per_exact"] < metrics["round_2_search_cost_per_exact"]
+    assert metrics["graduation_reused_program_count"] >= 2
+
+
 def test_minimal_arc_smoke_runs_without_loading_legacy_strategies(
     arc_fixture_dir: Path,
     repo_root: Path,
