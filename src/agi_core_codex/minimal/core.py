@@ -390,6 +390,9 @@ class WakeSleepLearner:
             seen_program_ids.add(program.id)
             ordered_candidates.append(program)
 
+        for program in seed_programs:
+            append_candidate(program)
+
         for program in frontier_library_programs:
             append_candidate(program)
 
@@ -407,9 +410,6 @@ class WakeSleepLearner:
                 for left in left_pool:
                     for right in right_pool:
                         append_candidate(compose_program(compositor, left, right))
-
-        for program in seed_programs:
-            append_candidate(program)
 
         for program in library_programs:
             append_candidate(program)
