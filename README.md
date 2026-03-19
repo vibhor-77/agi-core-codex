@@ -1,118 +1,109 @@
 # agi-core-codex
 
-`agi-core-codex` is a clean-slate rebuild of the AGI prototype around two constraints:
+`agi-core-codex` now defaults to a minimal 4-pillars learner.
 
-1. The shared core must stay genuinely domain-generic.
-2. Benchmark-specific machinery must live in explicit strategy plugins with measured attribution.
+The active path is intentionally small:
+- tiny seeded primitives
+- generic AST composition
+- staged wake/sleep memory
+- round-based compounding
+- synthetic curriculum before serious ARC work
 
-This repository starts with ARC as the first implemented domain and keeps room for Zork and later robotics without polluting the common core with ARC-shaped hooks.
+The old solver stack still exists for comparison, but it is now explicitly archived behind `legacy` commands instead of being the default mental model of the repo.
 
-## What exists today
+## Active Idea
 
-- A small generic kernel built around `Environment`, `Grammar`, `Scorer`, `Memory`, and `Strategy`.
-- A transfer-oriented hypothesis pipeline built around `TaskRepresentation`, `Hypothesis`,
-  `HypothesisFamily`, `Verifier`, and compiled executable programs with stable IDs.
-- Deterministic budgeted search with explicit failure handling.
-- Immutable run manifests and an artifact index for reproducible experiments.
-- ARC support implemented as a plugin layer with named strategies:
-  - grammar primitives, including crop-to-content, gravity, targeted color swaps, and foreground recoloring
-  - boolean halves cross-reference
-  - directional ray extension and masked span fill
-  - row/column decomposition via explicit row and column sorting rules
-  - separator-grid row/column propagation
-  - separator-based cross-reference and cell reductions
-  - scale/tile/downscale ratio detection
-  - template stamping
-  - anchor-based motif completion
-  - triomino corner completion inside 2x2 windows
-  - collinear gap bridging with inferred fill markers
-  - hole projection from interior zero markers along the short axis
-  - solid rectangle extraction from noisy connected components
-  - rectangular ring recoloring with task-inferred target colors
-  - scaffold-driven column projection from 8-cell anchor components
-  - zero-pattern propagation from a learned displacement vector
-  - constant-output synthesis
-  - consistent color-map synthesis
-  - task-scoped absolute patch synthesis
-- Four CLI profiles:
-  - `baseline-core`
-  - `arc-accuracy`
-  - `arc-theory`
-  - `arc-transfer`
-  - `arc-bootstrap`
+The active learner is trying to validate a stricter thesis than "build a stronger ARC solver":
 
-## Quick start
+1. Start from near-zero generic seeds.
+2. Search for small programs that solve tasks.
+3. Promote reusable subprograms into a committed library only after a sleep step.
+4. Reuse that committed library in later rounds so capability grows by compounding, not by hand-authored tactics.
+
+The active seeded grid vocabulary for v1 is deliberately tiny:
+- unary seeds: `identity`, `flip_h`, `flip_v`, `transpose`, `crop_support`
+- binary compositors: `chain`, `overlay`, `hcat`, `vcat`
+
+No separator, motif, barrier, template, row/column, or object-specific ARC tactics are part of the default learner path.
+
+## Active Surface
+
+The default public learner surface is:
+- [PrimitiveSpec](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal/ops.py)
+- [Program](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal/core.py)
+- [LearnerMemory](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal/core.py)
+- [WakeSleepLearner](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal/core.py)
+- [RoundSummary](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal/core.py)
+
+The main active runner is [run_minimal](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal/runner.py).
+
+## Default CLI
+
+Use the minimal learner by default:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[dev]'
 pytest
-python -m agi_core_codex arc-data discover --benchmark arc-agi-1 --split training
-python -m agi_core_codex arc-data make-splits \
-  --benchmark arc-agi-1 \
-  --output-dir experiments/splits \
-  --train-val-count 80 \
-  --seed 7
-python -m agi_core_codex arc-accuracy tune \
-  --split-file experiments/splits/arc_agi_1_train_dev.json
-python -m agi_core_codex arc-transfer tune \
-  --split-file experiments/splits/arc_agi_1_train_val.json
-python -m agi_core_codex arc-bootstrap tune \
-  --split-file experiments/splits/arc_agi_1_train_val.json \
+
+python -m agi_core_codex minimal tune \
+  --domain synthetic-grid \
+  --curriculum-tier pair \
+  --rounds 2
+
+python -m agi_core_codex minimal tune \
+  --domain arc \
+  --split-file experiments/splits/arc_minimal_smoke.json \
   --rounds 2
 ```
 
-## Current ARC-AGI-1 snapshot
+Archived solver commands are still available, but only through `legacy`:
 
-Latest accepted checkpoint on `main`: March 18, 2026.
+```bash
+python -m agi_core_codex legacy arc-accuracy tune --split-file experiments/splits/arc_agi_1_train_dev.json
+python -m agi_core_codex legacy arc-transfer tune --split-file experiments/splits/arc_agi_1_train_val.json
+python -m agi_core_codex legacy arc-bootstrap tune --split-file experiments/splits/arc_agi_1_train_val.json --rounds 2
+```
 
-- Frozen `arc-accuracy` baseline:
-  - `train-dev`: `42/320` exact on train examples, `47/320` exact on test examples
-  - `train-val`: `36/80` exact on train examples, `36/80` exact on test examples
-  - `public-eval`: `17/400` exact on test examples, which is `4.25%`
-- First `arc-transfer` checkpoint:
-  - `train-dev`: `15/320` exact on train examples
-  - `train-val`: `4/80` exact on train examples
-- First `arc-bootstrap` checkpoint:
-  - `train-dev`: `7/320` exact on train examples after 2 rounds
-  - `train-val`: `2/80` exact on train examples after 2 rounds
-  - round-to-round gain is small but real: `6 -> 7` on `train-dev`, `1 -> 2` on `train-val`
+For backward compatibility, direct old command names like `python -m agi_core_codex arc-data ...` still route to `legacy`.
 
-The baseline and transfer numbers are intentionally reported side by side. The transfer
-track is a family-based redesign, not a stronger benchmark result yet. The bootstrap
-track is closer to the original 4-pillars thesis: tiny seed grammar, generic sequential
-composition, staged wake/sleep memory, and explicit multi-round library growth. Public
-eval remains checkpoint-only reporting, not a tuning signal.
+## What The Rewrite Changed
 
-## Design choices
+- The default entrypoint is now the minimal learner, not the ARC strategy stack.
+- The active curriculum starts with generated synthetic baby tasks in [domains.py](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal/domains.py).
+- Wake can only reuse the committed library from prior rounds.
+- Sleep promotes reusable subprograms using only exactness, mean accuracy, compression gain, reuse breadth, and failure behavior.
+- `library_ref` wrappers are no longer promoted as if they were genuine abstractions.
+- The public `agi_core_codex.core` surface now points at the minimal learner types.
 
-- The core has no ARC-only escape hatches.
-- Dynamic operators get stable semantic IDs.
-- Failure is treated as failure, never silently mapped to identity.
-- ARC recovery heuristics live as explicit strategies that can be ablated from the CLI.
-- The transfer track uses five broad ARC hypothesis families instead of the one-task
-  strategy zoo: global transforms, object transforms, relation propagation, template
-  completion, and region routing.
-- The bootstrap track intentionally starts much lower-level: a tiny seeded ARC grammar,
-  generic sequential composition, and staged round-based library promotion.
-- Public evaluation should be checkpoint-only; tuning happens on train-derived splits.
+## Current Evidence
+
+This rewrite is about compounding evidence first, not top-line ARC score first.
+
+Current verified signals:
+- synthetic compounding smoke: round 2 beats round 1 and reuses committed library
+- minimal ARC smoke: the active ARC path runs end to end without importing legacy ARC strategy modules
+- focused verification after the rewrite: `73 passed`
+
+The synthetic curriculum is the first gate. The graduation criteria before serious ARC emphasis are:
+- round-to-round solve gain
+- non-zero library reuse
+- lower search cost per exact solve after promotion on at least one curriculum tier
 
 ## Layout
 
-- `src/agi_core_codex/core/`: generic kernel, manifests, memory, reusable strategies
-- `src/agi_core_codex/domains/arc/`: ARC domain implementation and ARC-only strategies
-- `experiments/splits/`: split policies and example split files
-- `artifacts/`: immutable run outputs
-- `tests/`: unit and regression tests
+- [src/agi_core_codex/minimal](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/minimal): active minimal learner
+- [src/agi_core_codex/legacy](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/legacy): archived command surface for older solver stacks
+- [src/agi_core_codex/domains/arc](/Users/vibhorjain/github/agi-core-codex/src/agi_core_codex/domains/arc): ARC data types, loaders, scorers, and legacy solver implementations
+- [experiments/splits](/Users/vibhorjain/github/agi-core-codex/experiments/splits): synthetic and ARC split files
+- [tests](/Users/vibhorjain/github/agi-core-codex/tests): regression and smoke coverage
 
-## Real-data workflow
+## Honest Status
 
-Use `arc-data make-splits` against the ARC training directory to create deterministic
-`train-dev` and `train-val` files. If the dataset is present in a common location,
-the command auto-discovers it. In this workspace it can discover the sibling
-read-only dataset under `~/github/agi-core/data/ARC-AGI/data/training`.
+The repo is much closer to the spirit of the 4 pillars now, but it is still early.
 
-Once a split file has `benchmark` and `source_dataset_dir` metadata, `arc-accuracy`,
-`arc-theory`, `arc-transfer`, and `arc-bootstrap` can auto-resolve the dataset path,
-so `--dataset-dir` becomes optional.
+- The active learner is minimal enough to study compounding directly.
+- The legacy ARC solvers are still in the repository because they remain useful baselines.
+- Serious ARC performance is not yet the claim of the active path.
+- The next work should improve generic sleep/promotion and curriculum design before reintroducing benchmark pressure.
